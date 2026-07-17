@@ -3,6 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="image" href="assets/luke-cutout.webp" fetchpriority="high">
+<link rel="icon" href="assets/logo-round.webp">
 <script src="./support.js"></script>
 </head>
 <body>
@@ -63,7 +67,7 @@
   <div style="position:sticky;top:0;z-index:50;background:rgba(19,19,19,0.94);backdrop-filter:blur(8px);border-bottom:1px solid #2A2A24">
     <div class="rnav" style="max-width:1240px;margin:0 auto;display:flex;align-items:center;gap:28px;padding:14px 24px">
       <div style="display:flex;align-items:center;gap:12px;cursor:pointer" onClick="{{ goHome }}">
-        <img src="assets/logo-round.png" alt="Luke's Good Lifestyle" style="width:52px;height:56px;object-fit:contain">
+        <img src="assets/logo-round.webp" alt="Luke's Good Lifestyle" style="width:52px;height:56px;object-fit:contain">
         <div style="font-family:'Anton',sans-serif;font-size:18px;line-height:1;letter-spacing:0.04em;text-transform:uppercase">Luke's <span style="color:#F2E635">Good</span> Lifestyle</div>
       </div>
       <div class="rnavlinks" style="display:flex;gap:22px;margin-left:auto;align-items:center;font-weight:700;font-size:14px;letter-spacing:0.04em;text-transform:uppercase">
@@ -113,7 +117,7 @@
             </div>
             <div class="rheroimg" style="position:relative;display:flex;justify-content:center;z-index:2;margin-top:-240px;animation:fadeUp 0.8s ease 0.2s both">
               <div style="position:absolute;bottom:0;width:86%;height:72%;background:#F2E635;background-image:radial-gradient(rgba(19,19,19,0.10) 1.6px, transparent 1.6px);background-size:14px 14px;transform:skewX(-4deg);border-radius:6px 6px 0 0"></div>
-              <img src="assets/luke-cutout.png" alt="Luke" style="position:relative;width:112%;max-width:600px;display:block;filter:drop-shadow(0 24px 48px rgba(0,0,0,0.55))">
+              <img src="assets/luke-cutout.webp" alt="Luke" style="position:relative;width:112%;max-width:600px;display:block;filter:drop-shadow(0 24px 48px rgba(0,0,0,0.55))">
               <div style="position:absolute;top:-14px;right:2%;text-align:center;animation:fadeUp 0.6s ease 0.7s both">
                 <div style="font-family:'Caveat',cursive;font-weight:700;font-size:34px;color:#FAFAF0;transform:rotate(-6deg)">I'm Luke</div>
                 <svg width="44" height="40" viewBox="0 0 44 40" style="display:block;margin:2px auto 0;transform:translateX(-26px)"><path d="M36 4 Q 14 8 10 32" fill="none" stroke="#F2E635" stroke-width="3" stroke-linecap="round"></path><path d="M18 27 L 10 32 L 8 23" fill="none" stroke="#F2E635" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path></svg>
@@ -199,7 +203,7 @@
           <div data-reveal style="position:relative;order:2">
             <div style="position:absolute;inset:18px -14px -14px 18px;background:#F2E635;background-image:radial-gradient(rgba(19,19,19,0.10) 1.6px, transparent 1.6px);background-size:14px 14px;border-radius:20px;transform:rotate(-2deg)"></div>
             <div style="position:relative;aspect-ratio:4/5;border-radius:18px;overflow:hidden;background:#191916;border:1px solid #2A2A24">
-              <image-slot id="meet-luke-photo" src="assets/luke-cutout.png" shape="rect" fit="cover" placeholder="Drop a photo of Luke"></image-slot>
+              <image-slot id="meet-luke-photo" src="assets/luke-cutout.webp" shape="rect" fit="cover" placeholder="Drop a photo of Luke"></image-slot>
             </div>
             <div style="position:absolute;bottom:22px;left:-10px;background:#131313;border:1px solid #2A2A24;border-left:4px solid #F2E635;border-radius:10px;padding:12px 18px">
               <div style="font-family:'Anton',sans-serif;font-size:18px;text-transform:uppercase">Luke</div>
@@ -298,10 +302,10 @@
           <a href="https://instagram.com/lukesgoodlifestyle" target="_blank" style="border:2px solid #F2E635;color:#F2E635;padding:12px 26px;border-radius:999px;font-weight:800;font-size:13px;text-transform:uppercase;letter-spacing:0.05em" style-hover="background:#F2E635;color:#131313">@lukesgoodlifestyle →</a>
         </div>
         <div class="rig" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:26px">
-          <a data-reveal="1" href="https://www.instagram.com/p/DPRcZ7NCLr2/" target="_blank" style="display:block;position:relative;aspect-ratio:1;border-radius:12px;overflow:hidden;border:1px solid #2A2A24"><div role="img" aria-label="Instagram post" style="width:100%;height:100%;background-image:url('assets/ig/ig-1.png');background-size:cover;background-position:center;transition:transform 0.4s ease" style-hover="transform:scale(1.06)"></div></a>
-          <a data-reveal="2" href="https://www.instagram.com/p/DVSvBZsjHXQ/" target="_blank" style="display:block;position:relative;aspect-ratio:1;border-radius:12px;overflow:hidden;border:1px solid #2A2A24"><div role="img" aria-label="Instagram post" style="width:100%;height:100%;background-image:url('assets/ig/ig-2.png');background-size:cover;background-position:center;transition:transform 0.4s ease" style-hover="transform:scale(1.06)"></div></a>
-          <a data-reveal="3" href="https://www.instagram.com/p/DXeluq2DM0X/" target="_blank" style="display:block;position:relative;aspect-ratio:1;border-radius:12px;overflow:hidden;border:1px solid #2A2A24"><div role="img" aria-label="Instagram post" style="width:100%;height:100%;background-image:url('assets/ig/ig-3.png');background-size:cover;background-position:center top;transition:transform 0.4s ease" style-hover="transform:scale(1.06)"></div></a>
-          <a data-reveal href="https://www.instagram.com/p/DOd1rXyjO5b/" target="_blank" style="display:block;position:relative;aspect-ratio:1;border-radius:12px;overflow:hidden;border:1px solid #2A2A24"><div role="img" aria-label="Instagram post" style="width:100%;height:100%;background-image:url('assets/ig/ig-4.png');background-size:cover;background-position:center;transition:transform 0.4s ease" style-hover="transform:scale(1.06)"></div></a>
+          <a data-reveal="1" href="https://www.instagram.com/p/DPRcZ7NCLr2/" target="_blank" style="display:block;position:relative;aspect-ratio:1;border-radius:12px;overflow:hidden;border:1px solid #2A2A24"><div role="img" aria-label="Instagram post" style="width:100%;height:100%;background-image:url('assets/ig/ig-1.webp');background-size:cover;background-position:center;transition:transform 0.4s ease" style-hover="transform:scale(1.06)"></div></a>
+          <a data-reveal="2" href="https://www.instagram.com/p/DVSvBZsjHXQ/" target="_blank" style="display:block;position:relative;aspect-ratio:1;border-radius:12px;overflow:hidden;border:1px solid #2A2A24"><div role="img" aria-label="Instagram post" style="width:100%;height:100%;background-image:url('assets/ig/ig-2.webp');background-size:cover;background-position:center;transition:transform 0.4s ease" style-hover="transform:scale(1.06)"></div></a>
+          <a data-reveal="3" href="https://www.instagram.com/p/DXeluq2DM0X/" target="_blank" style="display:block;position:relative;aspect-ratio:1;border-radius:12px;overflow:hidden;border:1px solid #2A2A24"><div role="img" aria-label="Instagram post" style="width:100%;height:100%;background-image:url('assets/ig/ig-3.webp');background-size:cover;background-position:center top;transition:transform 0.4s ease" style-hover="transform:scale(1.06)"></div></a>
+          <a data-reveal href="https://www.instagram.com/p/DOd1rXyjO5b/" target="_blank" style="display:block;position:relative;aspect-ratio:1;border-radius:12px;overflow:hidden;border:1px solid #2A2A24"><div role="img" aria-label="Instagram post" style="width:100%;height:100%;background-image:url('assets/ig/ig-4.webp');background-size:cover;background-position:center;transition:transform 0.4s ease" style-hover="transform:scale(1.06)"></div></a>
         </div>
       </div>
 
@@ -642,7 +646,7 @@
       <div class="rfoot" style="display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:60px;align-items:start">
         <div>
           <div style="display:flex;align-items:center;gap:20px">
-            <img src="assets/logo-round.png" alt="Luke's Good Lifestyle" style="width:84px;height:89px;object-fit:contain">
+            <img src="assets/logo-round.webp" alt="Luke's Good Lifestyle" style="width:84px;height:89px;object-fit:contain">
             <div style="font-family:'Anton',sans-serif;font-size:clamp(26px,2.6vw,36px);text-transform:uppercase;line-height:1.08">Train hard.<br><span style="color:#F2E635">Live well.</span> Be your best.</div>
           </div>
           <div style="color:#8F8F82;font-size:14px;line-height:1.7;margin-top:20px;max-width:380px">Personal training, wellness coaching and Luke's Gold supplements, in person at Planet Fitness Lynnwood Bridge or online, anywhere.</div>
@@ -767,8 +771,8 @@ class Component extends DCLogic {
       specialText: saved.specialText || "WINTER SALE, Luke's Good Gold now R299 (was R399). Limited stock!",
       specialDraft: saved.specialText || "WINTER SALE, Luke's Good Gold now R299 (was R399). Limited stock!",
       products: saved.products || [
-        { id: 'gold', name: "Luke's Good Gold", tag: 'Golden paste capsules · 30 servings', desc: 'Luke\u2019s signature turmeric golden-paste blend. Boosts immunity, supports fat loss, improves digestion and keeps energy & focus high all day.', price: 399, sale: 299, saleOn: true, stock: 42, img: 'assets/product-good-gold.png' },
-        { id: 'gg', name: 'Eterna\u2122 GG', tag: 'Geranylgeraniol 150mg · 30 soft gels', desc: 'Cellular energy, stronger every day. Supports mitochondrial function, muscle recovery, healthy aging and heart health. Part of Luke\u2019s Gold Line.', price: 450, sale: null, saleOn: false, stock: 18, img: 'assets/product-eterna-gg.png' }
+        { id: 'gold', name: "Luke's Good Gold", tag: 'Golden paste capsules · 30 servings', desc: 'Luke\u2019s signature turmeric golden-paste blend. Boosts immunity, supports fat loss, improves digestion and keeps energy & focus high all day.', price: 399, sale: 299, saleOn: true, stock: 42, img: 'assets/product-good-gold.webp' },
+        { id: 'gg', name: 'Eterna\u2122 GG', tag: 'Geranylgeraniol 150mg · 30 soft gels', desc: 'Cellular energy, stronger every day. Supports mitochondrial function, muscle recovery, healthy aging and heart health. Part of Luke\u2019s Gold Line.', price: 450, sale: null, saleOn: false, stock: 18, img: 'assets/product-eterna-gg.webp' }
       ],
       cart: saved.cart || [],
       orders: saved.orders || [
@@ -933,14 +937,14 @@ class Component extends DCLogic {
     }));
 
     const resultsData = [
-      { name: 'Ruan', program: '16 weeks · in person', loss: '-20kg', before: 'assets/results/ruan-before.png', after: 'assets/results/ruan-after.png' },
-      { name: 'Divan', program: '20 weeks · hybrid', loss: '-18kg', before: 'assets/results/divan-before.png', after: 'assets/results/divan-after.png' },
-      { name: 'Devon', program: '10 weeks · online', loss: '-16kg', before: 'assets/results/kobus-before.png', after: 'assets/results/kobus-after.png' },
+      { name: 'Ruan', program: '16 weeks · in person', loss: '-20kg', before: 'assets/results/ruan-before.webp', after: 'assets/results/ruan-after.webp' },
+      { name: 'Divan', program: '20 weeks · hybrid', loss: '-18kg', before: 'assets/results/divan-before.webp', after: 'assets/results/divan-after.webp' },
+      { name: 'Devon', program: '10 weeks · online', loss: '-16kg', before: 'assets/results/kobus-before.webp', after: 'assets/results/kobus-after.webp' },
     ];
     const transformIds = ['9234','2211','8411','8407','8406','8398','8396','8235','6662','6413','5176','5175','5174','5147','5146','3571','3432','2885','2301','0404','0375','0210','0191','0072','0048','8834'];
     transformIds.forEach(id => resultsData.push({
-      before: 'assets/results/img' + id + '-before.png',
-      after: 'assets/results/img' + id + '-after.png'
+      before: 'assets/results/img' + id + '-before.webp',
+      after: 'assets/results/img' + id + '-after.webp'
     }));
     const allResults = resultsData.map((r, i) => ({ ...r, hasInfo: !!r.name, beforeId: 'res-' + i + '-before', afterId: 'res-' + i + '-after', beforeSrc: r.before || '', afterSrc: r.after || '' }));
 
