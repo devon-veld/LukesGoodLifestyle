@@ -1,9 +1,10 @@
-# Netlify — Luke's Good Lifestyle (static site export)
-# No build step — pure static files. The explicit no-op command overrides
-# any "npm run build" saved in the Netlify UI from the earlier React setup.
+# Netlify — Luke's Good Lifestyle (static design site)
+# The build copies the static files into dist/. This matches BOTH possible
+# Netlify configs (UI-saved "npm run build" + dist from the earlier Vite
+# import, and this toml), so every deploy publishes the design.
 [build]
-  command = "echo 'Static site — nothing to build'"
-  publish = "."
+  command = "npm run build"
+  publish = "dist"
 
 # Single-page app: serve index.html for every route
 [[redirects]]
