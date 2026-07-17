@@ -1,5 +1,8 @@
 # Netlify — Luke's Good Lifestyle (static site export)
+# No build step — pure static files. The explicit no-op command overrides
+# any "npm run build" saved in the Netlify UI from the earlier React setup.
 [build]
+  command = "echo 'Static site — nothing to build'"
   publish = "."
 
 # Single-page app: serve index.html for every route
