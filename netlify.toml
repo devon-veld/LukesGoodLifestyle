@@ -1,0 +1,14 @@
+# Netlify — Luke's Good Lifestyle (static site export)
+[build]
+  publish = "."
+
+# Single-page app: serve index.html for every route
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
