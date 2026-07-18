@@ -2,7 +2,8 @@
 import { getStore } from '@netlify/blobs';
 import { scryptSync, randomBytes, createHmac, timingSafeEqual } from 'node:crypto';
 
-export const store = () => getStore('lgl');
+// Strong consistency: reads always see the latest write (auth, orders, stock).
+export const store = () => getStore({ name: 'lgl', consistency: 'strong' });
 
 export const json = (data, status = 200, headers = {}) =>
   new Response(JSON.stringify(data), {
