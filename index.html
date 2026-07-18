@@ -895,7 +895,7 @@ class Component extends DCLogic {
   constructor(props) {
     super(props);
     let saved = {};
-    try { saved = JSON.parse(localStorage.getItem('lgl-store-v2') || '{}'); } catch (e) {}
+    try { saved = JSON.parse(localStorage.getItem('lgl-store-v3') || '{}'); } catch (e) {}
     this.state = {
       page: 'home',
       cartOpen: false,
@@ -909,7 +909,7 @@ class Component extends DCLogic {
       specialActive: saved.specialActive !== undefined ? saved.specialActive : true,
       specialText: saved.specialText || "WINTER SALE, Luke's Good Gold now R299 (was R399). Limited stock!",
       specialDraft: saved.specialText || "WINTER SALE, Luke's Good Gold now R299 (was R399). Limited stock!",
-      products: saved.products || [
+      products: [
         { id: 'gold', name: "Luke's Good Gold", tag: 'Golden paste capsules · 30 servings', desc: 'Luke\u2019s signature turmeric golden-paste blend. Boosts immunity, supports fat loss, improves digestion and keeps energy & focus high all day.', price: 399, sale: 299, saleOn: true, stock: 42, img: 'assets/product-good-gold.webp' },
         { id: 'gg', name: 'Eterna\u2122 GG', tag: 'Geranylgeraniol 150mg · 30 soft gels', desc: 'Cellular energy, stronger every day. Supports mitochondrial function, muscle recovery, healthy aging and heart health. Part of Luke\u2019s Gold Line.', price: 450, sale: null, saleOn: false, stock: 18, img: 'assets/product-eterna-gg.webp' }
       ],
@@ -946,21 +946,33 @@ class Component extends DCLogic {
 
     // Global lazy-video manager: wires every <video> (also after re-renders),
     // downloads/plays only when on screen, pauses off screen.
-    const wired = new WeakSet();
+    const wired = new Set();
+    const ensurePlay = v => {
+      if (!v.isConnected || !v.__vis) return;
+      v.muted = true; v.loop = true; v.playsInline = true;
+      if (v.paused) v.play().catch(() => {});
+    };
     this._vio = new IntersectionObserver(entries => entries.forEach(en => {
       const v = en.target;
-      if (en.isIntersecting) { v.muted = true; v.play().catch(() => {}); }
+      v.__vis = en.isIntersecting;
+      if (en.isIntersecting) ensurePlay(v);
       else v.pause();
     }), { rootMargin: '300px 0px' });
     const wireVideos = () => document.querySelectorAll('video').forEach(v => {
       if (wired.has(v)) return;
       wired.add(v);
       v.muted = true; v.loop = true; v.playsInline = true;
+      // A framework re-render can re-set attributes (even to the same value),
+      // which resets the media element to paused — resume automatically.
+      v.addEventListener('emptied', () => setTimeout(() => ensurePlay(v), 150));
+      v.addEventListener('pause', () => setTimeout(() => ensurePlay(v), 250));
       this._vio.observe(v);
     });
     wireVideos();
     new MutationObserver(() => { clearTimeout(this._vwT); this._vwT = setTimeout(wireVideos, 80); })
       .observe(document.body, { childList: true, subtree: true });
+    // low-cost safety net: any visible-but-paused video gets nudged
+    setInterval(() => wired.forEach(v => { if (!v.isConnected) { wired.delete(v); return; } ensurePlay(v); }), 2000);
 
     // Server catalog is the source of truth once deployed (Netlify Functions).
     // Only setState when something actually changed — avoids a full re-render
@@ -969,13 +981,13 @@ class Component extends DCLogic {
       if (state && state.products) {
         this._serverMode = true;
         const cur = this.state;
-        const merged = state.products.map(p => ({ ...(cur.products.find(x => x.id === p.id) || {}), ...p }));
+        const merged = cur.products.map(p => ({ ...p, ...(state.products.find(x => x.id === p.id) || {}) }));
         const sActive = !!(state.special && state.special.active);
         const sText = (state.special && state.special.text) || '';
         const changed = JSON.stringify(merged) !== JSON.stringify(cur.products)
           || sActive !== cur.specialActive || sText !== cur.specialText;
         if (changed) {
-          this.setState({ products: merged, specialActive: sActive, specialText: sText, specialDraft: sText });
+          this.set({ products: merged, specialActive: sActive, specialText: sText, specialDraft: sText });
         }
       }
     }).catch(() => {});
@@ -994,8 +1006,8 @@ class Component extends DCLogic {
   persist() {
     const s = this.state;
     try {
-      localStorage.setItem('lgl-store-v2', JSON.stringify({
-        products: s.products, cart: s.cart, orders: s.orders,
+      localStorage.setItem('lgl-store-v3', JSON.stringify({
+        cart: s.cart, orders: s.orders,
         specialActive: s.specialActive, specialText: s.specialText, nextOrderNum: s.nextOrderNum
       }));
     } catch (e) {}
