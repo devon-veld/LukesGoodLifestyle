@@ -15,6 +15,8 @@ const items = [
   'image-slot.js',
   '.image-slots.state.json',
   '_redirects',
+  'robots.txt',
+  'sitemap.xml',
   'assets',
 ];
 

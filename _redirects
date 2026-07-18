@@ -1,1 +1,8 @@
-/*    /index.html   200
+# API -> Netlify Functions (must precede the SPA catch-all)
+/api/auth          /.netlify/functions/auth          200
+/api/store         /.netlify/functions/storeapi      200
+/api/orders        /.netlify/functions/orders        200
+/api/checkout      /.netlify/functions/checkout      200
+/api/yoco/webhook  /.netlify/functions/yoco-webhook  200
+
+/*  /index.html  200

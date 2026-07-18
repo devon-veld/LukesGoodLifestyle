@@ -4,5 +4,8 @@
   "version": "1.0.0",
   "scripts": {
     "build": "node build.js"
+  },
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0"
   }
 }
