@@ -30,6 +30,13 @@ export default async (req) => {
       }
       return json({ ok: true, order: o });
     }
+    if (body.action === 'delete') {
+      const orders = await readOrders();
+      const next = orders.filter((x) => x.id !== body.id);
+      if (next.length === orders.length) return json({ error: 'order not found' }, 404);
+      await writeOrders(next);
+      return json({ ok: true });
+    }
     return json({ error: 'unknown action' }, 400);
   }
 
