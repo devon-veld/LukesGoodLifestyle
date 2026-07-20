@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://lukesgoodlifestyle.netlify.app/sitemap.xml
+Sitemap: https://lukesgoodlifestyle.com/sitemap.xml

@@ -1,4 +1,4 @@
-# Luke's Good Lifestyle — lukesgoodlifestyle.netlify.app
+# Luke's Good Lifestyle — lukesgoodlifestyle.com
 
 The production site: static design front-end + Netlify Functions backend
 (orders, payments, emails, admin auth) on Netlify Blobs storage.
@@ -41,7 +41,7 @@ session secret, login-fail counters. No external database needed.
 | Variable | Purpose | Where to get it |
 |---|---|---|
 | `YOCO_SECRET_KEY` | Enables real card payments (`sk_live_…`) | Yoco portal → Selling online → API keys |
-| `YOCO_WEBHOOK_SECRET` | Verifies payment webhooks (`whsec_…`) | Yoco portal → register webhook `https://lukesgoodlifestyle.netlify.app/api/yoco/webhook` |
+| `YOCO_WEBHOOK_SECRET` | Verifies payment webhooks (`whsec_…`) | Yoco portal → register webhook `https://lukesgoodlifestyle.com/api/yoco/webhook` |
 | `BREVO_API_KEY` | Transactional emails (`xkeysib-…`) | Brevo → SMTP & API → API keys |
 | `BREVO_SENDER_EMAIL` | The "from" address (default `ripponluke@gmail.com`) | must be a **verified sender** in Brevo |
 | `ORDER_NOTIFY_EMAIL` | Where Luke's "new order" mails go (default `ripponluke@gmail.com`) | — |
@@ -75,9 +75,21 @@ After adding variables: **Deploys → Trigger deploy** so functions pick them up
   JSON-LD (HealthClub, both Products, FAQ), `robots.txt`, `sitemap.xml`.
 - **GTM:** edit `window.GTM_ID` in `index.html` (search `GTM-XXXXXXX`) to enable
   analytics — it stays inert until a real ID is set, and loads after `load`.
-- When the custom domain goes live, search-replace
-  `https://lukesgoodlifestyle.netlify.app` in `index.html`, `robots.txt`,
-  `sitemap.xml`, then submit the sitemap in Google Search Console.
+- All URLs already point at `https://lukesgoodlifestyle.com`. Once DNS is
+  live, submit the sitemap in Google Search Console.
+
+## Domain cutover (lukesgoodlifestyle.com)
+> Note: the domain currently serves the old Shopify site — switching DNS
+> replaces it with this site. Do this as a deliberate cutover with Luke.
+1. Netlify → Domain management → **Add a domain** → `lukesgoodlifestyle.com`
+   → set it as the **primary domain** (netlify.app then auto-redirects).
+2. At the domain registrar, either move nameservers to Netlify DNS
+   (simplest), or set records manually:
+   - apex `lukesgoodlifestyle.com` → **A 75.2.60.5** (Netlify load balancer)
+   - `www` → **CNAME lukesgoodlifestyle.netlify.app**
+3. HTTPS is automatic (Let's Encrypt) a few minutes after DNS propagates.
+4. If the Yoco webhook was registered on the netlify.app URL, update it to
+   `https://lukesgoodlifestyle.com/api/yoco/webhook`.
 
 ## Local dev
 Serve the folder with any static server (e.g. `python -m http.server 8080`).

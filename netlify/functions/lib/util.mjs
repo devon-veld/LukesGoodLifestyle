@@ -11,7 +11,7 @@ export const json = (data, status = 200, headers = {}) =>
     headers: { 'content-type': 'application/json', 'cache-control': 'no-store', ...headers },
   });
 
-export const SITE_URL = (process.env.URL || 'https://lukesgoodlifestyle.netlify.app').replace(/\/$/, '');
+export const SITE_URL = (process.env.URL || 'https://lukesgoodlifestyle.com').replace(/\/$/, '');
 
 /* ---------------- Default catalog (seed) ---------------- */
 export const DEFAULT_STATE = {
