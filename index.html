@@ -3,6 +3,26 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script>
+/* Kill-switch for the stale service worker left by an earlier deployment.
+   It intercepted media requests (videos frozen on normal loads; hard refresh
+   bypasses SWs, which is why that "fixed" it). Unregister + clear caches,
+   and reload once if this page load was already controlled by it. */
+(function () {
+  if (!('serviceWorker' in navigator)) return;
+  try {
+    var controlled = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.getRegistrations().then(function (rs) {
+      rs.forEach(function (r) { r.unregister(); });
+      if (window.caches) caches.keys().then(function (ks) { ks.forEach(function (k) { caches.delete(k); }); });
+      if (controlled && !sessionStorage.getItem('sw-purged')) {
+        sessionStorage.setItem('sw-purged', '1');
+        setTimeout(function () { location.reload(); }, 150);
+      }
+    });
+  } catch (e) {}
+})();
+</script>
 <title>Personal Trainer Pretoria | Luke's Good Lifestyle — Train Hard. Live Well. Be Your Best.</title>
 <meta name="description" content="Personal training in Pretoria at Planet Fitness Lynnwood Bridge or online — 120+ real transformations. Training plans from R1000/month, plus Luke's Gold supplements shipped across South Africa.">
 <link rel="canonical" href="https://lukesgoodlifestyle.netlify.app/">
