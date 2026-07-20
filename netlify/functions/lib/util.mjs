@@ -104,19 +104,28 @@ export async function requireAuth(req) {
   return checkSession(getCookie(req, 'lgl_admin'));
 }
 
-/* ---------------- Login rate limiting ---------------- */
-export async function loginAllowed() {
-  const f = (await store().get('auth-fails', { type: 'json' })) || { count: 0, until: 0 };
+/* ---------------- Login rate limiting (per client IP) ----------------
+   Keyed per IP so an attacker guessing passwords locks only themselves
+   out — Luke can still sign in from his own connection. */
+function clientKey(req) {
+  const ip = req.headers.get('x-nf-client-connection-ip')
+    || (req.headers.get('x-forwarded-for') || '').split(',')[0].trim()
+    || 'unknown';
+  return 'auth-fails:' + ip;
+}
+export async function loginAllowed(req) {
+  const f = (await store().get(clientKey(req), { type: 'json' })) || { count: 0, until: 0 };
   return Date.now() >= (f.until || 0);
 }
-export async function recordLogin(success) {
-  let f = (await store().get('auth-fails', { type: 'json' })) || { count: 0, until: 0 };
+export async function recordLogin(req, success) {
+  const key = clientKey(req);
+  let f = (await store().get(key, { type: 'json' })) || { count: 0, until: 0 };
   if (success) f = { count: 0, until: 0 };
   else {
     f.count = (f.count || 0) + 1;
     if (f.count >= 8) { f.until = Date.now() + 15 * 60_000; f.count = 0; }
   }
-  await store().setJSON('auth-fails', f);
+  await store().setJSON(key, f);
 }
 
 /* ---------------- Brevo transactional email ---------------- */
@@ -140,21 +149,26 @@ export async function sendEmail({ to, toName, subject, html }) {
 
 export const R = (n) => 'R' + Number(n || 0).toLocaleString('en-ZA');
 
+/* Escape user-supplied strings before interpolating into email HTML. */
+export const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
 export function orderEmailHtml(order, heading, intro) {
   const rows = order.items.map((i) =>
-    `<tr><td style="padding:6px 12px 6px 0">${i.name} × ${i.qty}</td><td align="right" style="padding:6px 0">${R(i.unit * i.qty)}</td></tr>`).join('');
+    `<tr><td style="padding:6px 12px 6px 0">${esc(i.name)} × ${i.qty}</td><td align="right" style="padding:6px 0">${R(i.unit * i.qty)}</td></tr>`).join('');
   const disc = order.discount ? `<tr><td style="padding:6px 12px 6px 0;color:#777">Gold Stack discount</td><td align="right" style="padding:6px 0;color:#777">−${R(order.discount)}</td></tr>` : '';
   return `
   <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;color:#131313">
     <div style="background:#131313;color:#F2E635;padding:18px 24px;border-radius:12px 12px 0 0;font-size:20px;font-weight:800">LUKE'S GOOD LIFESTYLE</div>
     <div style="border:1px solid #e5e5e5;border-top:0;padding:24px;border-radius:0 0 12px 12px">
-      <h2 style="margin:0 0 8px">${heading}</h2>
-      <p style="margin:0 0 16px;color:#555">${intro}</p>
+      <h2 style="margin:0 0 8px">${esc(heading)}</h2>
+      <p style="margin:0 0 16px;color:#555">${esc(intro)}</p>
       <p style="margin:0 0 4px"><strong>Order ${order.id}</strong></p>
       <table style="width:100%;border-collapse:collapse;font-size:14px">${rows}${disc}
         <tr><td style="padding:10px 12px 0 0;border-top:1px solid #eee"><strong>Total</strong></td><td align="right" style="padding:10px 0 0;border-top:1px solid #eee"><strong>${R(order.total)}</strong></td></tr>
       </table>
-      <p style="margin:18px 0 0;font-size:13px;color:#777">Delivery to: ${order.customer.address || '-'}<br>
+      <p style="margin:18px 0 0;font-size:13px;color:#777">Delivery to: ${esc(order.customer.address || '-')}<br>
       Questions? WhatsApp Luke on 073 028 3066.</p>
     </div>
   </div>`;

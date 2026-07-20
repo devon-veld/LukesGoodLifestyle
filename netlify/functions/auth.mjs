@@ -35,9 +35,9 @@ export default async (req) => {
 
   if (action === 'login') {
     if (!hasPassword) return json({ error: 'No password set yet.' }, 400);
-    if (!(await loginAllowed())) return json({ error: 'Too many attempts. Try again in 15 minutes.' }, 429);
+    if (!(await loginAllowed(req))) return json({ error: 'Too many attempts. Try again in 15 minutes.' }, 429);
     const ok = verifyPassword(String(body.password || ''), rec);
-    await recordLogin(ok);
+    await recordLogin(req, ok);
     if (!ok) return json({ error: 'Incorrect password.' }, 401);
     const token = await makeSession();
     return json({ ok: true }, 200, { 'set-cookie': sessionCookie(token) });

@@ -41,6 +41,13 @@ export default async (req) => {
   const priced = priceCart(body.cart, state.products);
   if (!priced.rows.length) return json({ error: 'Your cart is empty.' }, 400);
 
+  // stock guard: never sell more than we have
+  for (const row of priced.rows) {
+    const p = state.products.find((x) => x.id === row.id);
+    if (!p || p.stock <= 0) return json({ error: `${row.name} is sold out — WhatsApp Luke to reserve the next batch.` }, 409);
+    if (row.qty > p.stock) return json({ error: `Only ${p.stock} × ${row.name} left in stock — please lower the quantity.` }, 409);
+  }
+
   const order = {
     id: await nextOrderNumber(),
     createdAt: new Date().toISOString(),
