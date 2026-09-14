@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en-ZA">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -28,6 +28,10 @@
 <link rel="canonical" href="https://lukesgoodlifestyle.com/">
 <meta name="robots" content="index, follow, max-image-preview:large">
 <meta name="theme-color" content="#131313">
+<meta name="geo.region" content="ZA-GP">
+<meta name="geo.placename" content="Pretoria">
+<link rel="alternate" hreflang="en-za" href="https://lukesgoodlifestyle.com/">
+<link rel="alternate" hreflang="x-default" href="https://lukesgoodlifestyle.com/">
 
 <!-- Open Graph / social sharing -->
 <meta property="og:title" content="Luke's Good Lifestyle — Personal Trainer, Pretoria">
@@ -79,18 +83,20 @@
     {
       "@type": "Product",
       "name": "Luke's Good Gold",
+      "sku": "LGL-GOLD",
       "description": "Signature turmeric golden-paste capsules — immunity, digestion, energy and focus. 30 servings.",
       "image": "https://lukesgoodlifestyle.com/assets/product-good-gold.webp",
       "brand": { "@type": "Brand", "name": "Luke's Good Lifestyle" },
-      "offers": { "@type": "Offer", "priceCurrency": "ZAR", "price": "299", "availability": "https://schema.org/InStock", "url": "https://lukesgoodlifestyle.com/" }
+      "offers": { "@type": "Offer", "priceCurrency": "ZAR", "price": "299", "availability": "https://schema.org/InStock", "itemCondition": "https://schema.org/NewCondition", "url": "https://lukesgoodlifestyle.com/" }
     },
     {
       "@type": "Product",
       "name": "Eterna GG",
+      "sku": "LGL-GG",
       "description": "Geranylgeraniol 150mg soft gels — cellular energy, muscle recovery, healthy aging. 30 soft gels.",
       "image": "https://lukesgoodlifestyle.com/assets/product-eterna-gg.webp",
       "brand": { "@type": "Brand", "name": "Luke's Good Lifestyle" },
-      "offers": { "@type": "Offer", "priceCurrency": "ZAR", "price": "450", "availability": "https://schema.org/InStock", "url": "https://lukesgoodlifestyle.com/" }
+      "offers": { "@type": "Offer", "priceCurrency": "ZAR", "price": "450", "availability": "https://schema.org/InStock", "itemCondition": "https://schema.org/NewCondition", "url": "https://lukesgoodlifestyle.com/" }
     },
     {
       "@type": "FAQPage",
@@ -180,7 +186,7 @@
 <body>
 <x-dc>
 <helmet>
-  <title>Luke's Good Lifestyle, Train Hard. Live Well. Be Your Best.</title>
+  <title>Personal Trainer Pretoria | Luke's Good Lifestyle — Train Hard. Live Well. Be Your Best.</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Anton&amp;family=Archivo:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&amp;family=Caveat:wght@600;700&amp;display=swap" rel="stylesheet">
   <style>
@@ -269,7 +275,7 @@
             <span style="display:inline-block;width:36px;height:4px;background:#F2E635"></span>
             Fitness · Wellness · Lifestyle
           </div>
-          <div style="position:relative;z-index:1;font-family:'Anton',sans-serif;font-size:clamp(52px,7.8vw,112px);line-height:0.94;text-transform:uppercase;letter-spacing:0.005em;animation:fadeUp 0.7s ease 0.1s both">
+          <div role="heading" aria-level="1" style="position:relative;z-index:1;font-family:'Anton',sans-serif;font-size:clamp(52px,7.8vw,112px);line-height:0.94;text-transform:uppercase;letter-spacing:0.005em;animation:fadeUp 0.7s ease 0.1s both">
             Train hard.<br>
             <span style="color:transparent;-webkit-text-stroke:2.5px #F2E635">Live well.</span><br>
             <span style="background:#F2E635;color:#131313;padding:0 18px;display:inline-block;transform:skewX(-6deg)">Be your best.</span>
@@ -734,24 +740,24 @@
       <!-- STATS -->
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:32px">
         <div style="background:#F2E635;color:#131313;border-radius:14px;padding:22px">
-          <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;opacity:0.7">Revenue · July</div>
+          <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;opacity:0.7">Revenue · {{ monthLabel }}</div>
           <div style="font-family:'Anton',sans-serif;font-size:36px;margin-top:6px">{{ revenueLabel }}</div>
-          <div style="font-size:12px;font-weight:700;margin-top:4px">▲ 18% vs June</div>
+          <div style="font-size:12px;font-weight:700;margin-top:4px">{{ revenueAllTimeLabel }} all time</div>
         </div>
         <div style="background:#191916;border:1px solid #2A2A24;border-radius:14px;padding:22px">
-          <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:#8F8F82">Orders · July</div>
+          <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:#8F8F82">Orders · {{ monthLabel }}</div>
           <div style="font-family:'Anton',sans-serif;font-size:36px;margin-top:6px;color:#F2E635">{{ orderCount }}</div>
           <div style="font-size:12px;color:#8F8F82;margin-top:4px">{{ pendingCount }} awaiting shipment</div>
         </div>
         <div style="background:#191916;border:1px solid #2A2A24;border-radius:14px;padding:22px">
-          <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:#8F8F82">Sessions this week</div>
-          <div style="font-family:'Anton',sans-serif;font-size:36px;margin-top:6px;color:#F2E635">24</div>
-          <div style="font-size:12px;color:#8F8F82;margin-top:4px">3 open slots left</div>
+          <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:#8F8F82">Awaiting payment</div>
+          <div style="font-family:'Anton',sans-serif;font-size:36px;margin-top:6px;color:#F2E635">{{ awaitingPayCount }}</div>
+          <div style="font-size:12px;color:#8F8F82;margin-top:4px">started checkout, not paid yet</div>
         </div>
         <div style="background:#191916;border:1px solid #2A2A24;border-radius:14px;padding:22px">
-          <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:#8F8F82">Active clients</div>
-          <div style="font-family:'Anton',sans-serif;font-size:36px;margin-top:6px;color:#F2E635">18</div>
-          <div style="font-size:12px;color:#8F8F82;margin-top:4px">2 new this month</div>
+          <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:#8F8F82">Stock on hand</div>
+          <div style="font-family:'Anton',sans-serif;font-size:36px;margin-top:6px;color:#F2E635">{{ stockTotal }}</div>
+          <div style="font-size:12px;color:#8F8F82;margin-top:4px">{{ stockBreakdown }}</div>
         </div>
       </div>
 
@@ -952,13 +958,13 @@
           <div style="text-align:center;padding:20px 0">
             <div style="width:74px;height:74px;border-radius:999px;background:#F2E635;color:#131313;display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:900;margin:0 auto">✓</div>
             <div style="font-family:'Anton',sans-serif;font-size:30px;text-transform:uppercase;margin-top:18px">Order placed!</div>
-            <div style="color:#C9C9BC;font-size:15px;margin-top:10px;line-height:1.6">Thanks {{ checkoutName }}! A confirmation email is on its way and Luke will WhatsApp you with delivery details. Now go smash a workout.</div>
+            <div style="color:#C9C9BC;font-size:15px;margin-top:10px;line-height:1.6">Thanks! Payment received — a confirmation email is on its way and Luke will WhatsApp you with delivery details. Now go smash a workout.</div>
             <div style="margin-top:22px;background:#F2E635;color:#131313;padding:14px 28px;border-radius:999px;font-weight:800;font-size:14px;text-transform:uppercase;letter-spacing:0.05em;cursor:pointer;display:inline-block" style-hover="background:#FFFFFF" onClick="{{ closeCheckout }}">Done</div>
           </div>
         </sc-if>
         <sc-if value="{{ orderNotPlaced }}" hint-placeholder-val="{{ true }}">
           <div style="font-family:'Anton',sans-serif;font-size:28px;text-transform:uppercase">Checkout</div>
-          <div style="color:#8F8F82;font-size:13px;margin-top:4px">Secure payment via Yoco. Order confirmation lands in your inbox.</div>
+          <div style="color:#8F8F82;font-size:13px;margin-top:4px">Secure card payment via Paystack. Order confirmation lands in your inbox.</div>
           <div style="display:flex;flex-direction:column;gap:12px;margin-top:20px">
             <input placeholder="Full name" value="{{ checkoutName }}" onChange="{{ setCheckoutName }}" style="background:#131313;border:1px solid #3A3A30;border-radius:10px;color:#FAFAF0;padding:14px;font-size:15px">
             <input placeholder="WhatsApp number" value="{{ checkoutPhone }}" onChange="{{ setCheckoutPhone }}" style="background:#131313;border:1px solid #3A3A30;border-radius:10px;color:#FAFAF0;padding:14px;font-size:15px">
@@ -1077,13 +1083,32 @@ class Component extends DCLogic {
       }
     }).catch(() => {});
 
-    // Returning from Yoco hosted payment
+    // Returning from Paystack hosted payment
     const q = new URLSearchParams(location.search);
-    if (q.get('payment') === 'success') {
+    const payment = q.get('payment');
+    if (payment === 'success') {
+      // Confirm with the backend straight away (the webhook may lag); fire-and-forget.
+      const reference = q.get('reference') || q.get('trxref');
+      if (reference) {
+        try {
+          fetch('/api/paystack/verify', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ reference })
+          }).catch(() => {});
+        } catch (e) {}
+      }
       this.set({ cart: [] });
-      this.setState({ checkoutOpen: true, orderPlaced: true });
+      this.setState({ checkoutOpen: true, orderPlaced: true, checkoutError: false });
       history.replaceState({}, '', location.pathname);
-    } else if (q.get('payment')) {
+    } else if (payment === 'cancelled' || payment === 'failed') {
+      // Keep the cart; reopen checkout with a message so they can retry.
+      this.setState({
+        checkoutOpen: true, orderPlaced: false, checkoutError: true,
+        checkoutErrorMsg: 'Payment was cancelled — your cart is still here. Try again or WhatsApp Luke.'
+      });
+      history.replaceState({}, '', location.pathname);
+    } else if (payment) {
       history.replaceState({}, '', location.pathname);
     }
   }
@@ -1243,13 +1268,24 @@ class Component extends DCLogic {
         }
       };
     });
-    const revenue = s.orders.filter(o => o.status !== 'Awaiting payment').reduce((t, o) => t + (o.total || 0), 0) + (this._serverMode ? 0 : 8760);
+    const paidOrders = s.orders.filter(o => o.status !== 'Awaiting payment');
+    const orderDate = o => new Date(o.paidAt || o.createdAt || 0);
+    const now = new Date();
+    const thisMonth = o => { const d = orderDate(o); return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth(); };
+    const revenueAllTime = paidOrders.reduce((t, o) => t + (o.total || 0), 0);
+    const revenue = paidOrders.filter(thisMonth).reduce((t, o) => t + (o.total || 0), 0);
+    const monthLabel = now.toLocaleString('en-ZA', { month: 'long' });
 
-    const chartData = [
-      { day: 'Wed', v: 900 }, { day: 'Thu', v: 1497 }, { day: 'Fri', v: 598 },
-      { day: 'Sat', v: 2145 }, { day: 'Sun', v: 450 }, { day: 'Mon', v: 1795 }, { day: 'Tue', v: 2694 }
-    ];
-    const maxV = Math.max(...chartData.map(d => d.v));
+    // last 7 days of paid revenue, oldest -> today
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const chartData = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+      const key = d.toDateString();
+      const v = paidOrders.filter(o => orderDate(o).toDateString() === key).reduce((t, o) => t + (o.total || 0), 0);
+      chartData.push({ day: dayNames[d.getDay()], v });
+    }
+    const maxV = Math.max(1, ...chartData.map(d => d.v));
     const chartBars = chartData.map((d, i) => ({
       ...d, amount: R(d.v),
       h: Math.max(8, Math.round(d.v / maxV * 110)) + 'px',
@@ -1439,7 +1475,12 @@ class Component extends DCLogic {
       heroVideoRef: () => {},
 
       revenueLabel: R(revenue),
-      orderCount: s.orders.length,
+      revenueAllTimeLabel: R(revenueAllTime),
+      monthLabel,
+      orderCount: paidOrders.filter(thisMonth).length,
+      awaitingPayCount: s.orders.filter(o => o.status === 'Awaiting payment').length,
+      stockTotal: s.products.reduce((t, p) => t + (p.stock || 0), 0),
+      stockBreakdown: s.products.map(p => (p.name.split(' ').slice(-1)[0]) + ' ' + (p.stock || 0)).join(' · '),
       pendingCount: s.orders.filter(o => o.status === 'Pending').length,
       chartBars,
       orderRows

@@ -2,8 +2,22 @@
 import { getStore } from '@netlify/blobs';
 import { scryptSync, randomBytes, createHmac, timingSafeEqual } from 'node:crypto';
 
+/* Local-test store: set LGL_LOCAL_STORE=1 to swap Netlify Blobs for an
+   in-memory Map (same subset of the API the functions use). */
+const localData = new Map();
+const localStore = {
+  async get(key, opts) {
+    if (!localData.has(key)) return null;
+    const v = localData.get(key);
+    return opts && opts.type === 'json' ? JSON.parse(v) : v;
+  },
+  async set(key, value) { localData.set(key, String(value)); },
+  async setJSON(key, obj) { localData.set(key, JSON.stringify(obj)); },
+};
+
 // Strong consistency: reads always see the latest write (auth, orders, stock).
-export const store = () => getStore({ name: 'lgl', consistency: 'strong' });
+export const store = () =>
+  process.env.LGL_LOCAL_STORE === '1' ? localStore : getStore({ name: 'lgl', consistency: 'strong' });
 
 export const json = (data, status = 200, headers = {}) =>
   new Response(JSON.stringify(data), {
@@ -172,4 +186,45 @@ export function orderEmailHtml(order, heading, intro) {
       Questions? WhatsApp Luke on 073 028 3066.</p>
     </div>
   </div>`;
+}
+
+/* ---------------- Mark an order paid (Paystack) ----------------
+   Idempotent: called by both the Paystack webhook and /api/paystack/verify,
+   whichever arrives first. Finds the order by its Paystack reference (falling
+   back to paymentInfo.orderId), and only acts if it is still 'Awaiting
+   payment'. Sets status 'Pending' (paid, awaiting shipment), decrements stock
+   and sends the two Brevo emails. Returns the order, or null if not found. */
+export async function markOrderPaid(reference, paymentInfo = {}) {
+  const orders = await readOrders();
+  let o = reference ? orders.find((x) => x.reference === reference) : null;
+  if (!o && paymentInfo.orderId) o = orders.find((x) => x.id === paymentInfo.orderId);
+  if (!o) return null;
+  if (o.status !== 'Awaiting payment') return o; // already handled
+
+  o.status = 'Pending';
+  o.paidAt = new Date().toISOString();
+  o.paymentId = paymentInfo.paymentId || null;
+  o.paidVia = 'paystack';
+  if (paymentInfo.amountCents != null) o.amountPaid = Number(paymentInfo.amountCents) / 100;
+  await writeOrders(orders);
+
+  // decrement stock now that payment is confirmed
+  const state = await readState();
+  state.products = state.products.map((p) => {
+    const row = o.items.find((r) => r.id === p.id);
+    return row ? { ...p, stock: Math.max(0, p.stock - row.qty) } : p;
+  });
+  await writeState(state);
+
+  await sendEmail({
+    to: o.customer.email, toName: o.customer.name,
+    subject: `Payment received — order ${o.id} confirmed ✅`,
+    html: orderEmailHtml(o, 'Payment received — you legend!', "Your order is confirmed and Luke is packing it. You'll get courier tracking on WhatsApp. Now go smash a workout."),
+  });
+  await sendEmail({
+    to: process.env.ORDER_NOTIFY_EMAIL || 'ripponluke@gmail.com', toName: 'Luke',
+    subject: `💰 PAID — order ${o.id} from ${o.customer.name} (R${o.total})`,
+    html: orderEmailHtml(o, 'New PAID order!', `${o.customer.name} · ${o.customer.phone} · ${o.customer.email}. Pack it and mark it shipped in the admin.`),
+  });
+  return o;
 }

@@ -1,9 +1,10 @@
 /* /api/checkout — create an order and start payment.
    POST { cart:[{id,qty}], customer:{name, phone, address, email} }
 
-   With YOCO_SECRET_KEY set:   creates a Yoco hosted checkout and returns
-                               { redirectUrl } — customer pays on Yoco, the
-                               webhook marks the order paid.
+   With PAYSTACK_SECRET_KEY set: initialises a Paystack transaction and returns
+                               { redirectUrl, reference } — customer pays on
+                               Paystack, the webhook (or /api/paystack/verify)
+                               marks the order paid.
    Without it (not yet live):  records the order as an unpaid manual order
                                ("Pending · EFT/WhatsApp") and sends the emails,
                                returning { demo:true } so the site still works. */
@@ -59,42 +60,49 @@ export default async (req) => {
     total: priced.total,
   };
 
-  const yocoKey = process.env.YOCO_SECRET_KEY;
+  const paystackKey = process.env.PAYSTACK_SECRET_KEY;
 
-  if (yocoKey) {
-    /* ---- Real Yoco hosted checkout ---- */
+  if (paystackKey) {
+    /* ---- Real Paystack transaction (hosted checkout page) ---- */
+    // Paystack references: alphanumeric plus - . = only.
+    order.reference = 'LGL-' + order.id.replace('#', '') + '-' + Date.now().toString(36);
     try {
-      const res = await fetch('https://payments.yoco.com/api/checkouts', {
+      const res = await fetch('https://api.paystack.co/transaction/initialize', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${yocoKey}`, 'content-type': 'application/json' },
+        headers: { Authorization: `Bearer ${paystackKey}`, 'content-type': 'application/json' },
         body: JSON.stringify({
+          email: customer.email,
           amount: Math.round(order.total * 100),   // cents
           currency: 'ZAR',
-          successUrl: `${SITE_URL}/?payment=success&order=${encodeURIComponent(order.id)}`,
-          cancelUrl: `${SITE_URL}/?payment=cancelled`,
-          failureUrl: `${SITE_URL}/?payment=failed`,
-          metadata: { orderId: order.id, customerEmail: customer.email },
+          reference: order.reference,
+          callback_url: `${SITE_URL}/?payment=success&order=${encodeURIComponent(order.id)}`,
+          metadata: {
+            orderId: order.id,
+            customerName: customer.name,
+            customerPhone: customer.phone,
+            custom_fields: [{ display_name: 'Order', variable_name: 'order', value: order.id }],
+          },
         }),
       });
-      const data = await res.json();
-      if (!res.ok || !data.redirectUrl) {
-        console.error('yoco error', res.status, data);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.status || !data.data?.authorization_url) {
+        console.error('paystack initialize error', res.status, data);
         return json({ error: 'Payment could not be started. Please try again or WhatsApp Luke.' }, 502);
       }
-      order.checkoutId = data.id;
+      order.paystackAccessCode = data.data.access_code;
       const orders = await readOrders();
       orders.unshift(order);
       await writeOrders(orders);
-      return json({ redirectUrl: data.redirectUrl, orderId: order.id });
+      return json({ redirectUrl: data.data.authorization_url, orderId: order.id, reference: order.reference });
     } catch (e) {
-      console.error('yoco exception', e);
+      console.error('paystack exception', e);
       return json({ error: 'Payment service unavailable. Please WhatsApp Luke to order.' }, 502);
     }
   }
 
-  /* ---- Fallback: record as manual/unpaid order (pre-Yoco go-live) ---- */
+  /* ---- Fallback: record as manual/unpaid order (pre-Paystack go-live) ---- */
   order.status = 'Pending';
-  order.paymentNote = 'Manual order — payment to be arranged via WhatsApp/EFT (Yoco not configured yet)';
+  order.paymentNote = 'Manual order — payment to be arranged via WhatsApp/EFT (Paystack not configured yet)';
   const orders = await readOrders();
   orders.unshift(order);
   // reserve stock
@@ -112,7 +120,7 @@ export default async (req) => {
   await sendEmail({
     to: process.env.ORDER_NOTIFY_EMAIL || 'ripponluke@gmail.com', toName: 'Luke',
     subject: `🛒 New order ${order.id} from ${customer.name} — ${order.total ? 'R' + order.total : ''}`,
-    html: orderEmailHtml(order, 'New order on the site!', `From ${customer.name} · ${customer.phone} · ${customer.email}. Payment not yet collected (Yoco not configured).`),
+    html: orderEmailHtml(order, 'New order on the site!', `From ${customer.name} · ${customer.phone} · ${customer.email}. Payment not yet collected (Paystack not configured).`),
   });
   return json({ demo: true, orderId: order.id });
 };

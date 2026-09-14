@@ -14,9 +14,10 @@ netlify/functions/
   auth.mjs            /api/auth      admin password: first-run setup, login, logout, change
   storeapi.mjs        /api/store     GET catalog+special (public) · PUT updates (admin)
   orders.mjs          /api/orders    GET list · ship / delete (admin)
-  checkout.mjs        /api/checkout  server-priced order -> Yoco hosted checkout (or manual fallback)
-  yoco-webhook.mjs    /api/yoco/webhook  payment.succeeded -> mark paid, stock, emails
-  lib/util.mjs        blobs (strong consistency), scrypt, sessions, rate-limit, Brevo, pricing
+  checkout.mjs        /api/checkout  server-priced order -> Paystack transaction (or manual fallback)
+  paystack-webhook.mjs /api/paystack/webhook  charge.success -> mark paid, stock, emails
+  paystack-verify.mjs  /api/paystack/verify   success-page fallback: verify reference -> mark paid
+  lib/util.mjs        blobs (strong consistency), scrypt, sessions, rate-limit, Brevo, pricing, markOrderPaid
 ```
 
 **Storage:** Netlify Blobs (store `lgl`) — catalog/special, orders, password hash,
@@ -40,8 +41,7 @@ session secret, login-fail counters. No external database needed.
 
 | Variable | Purpose | Where to get it |
 |---|---|---|
-| `YOCO_SECRET_KEY` | Enables real card payments (`sk_live_…`) | Yoco portal → Selling online → API keys |
-| `YOCO_WEBHOOK_SECRET` | Verifies payment webhooks (`whsec_…`) | Yoco portal → register webhook `https://lukesgoodlifestyle.com/api/yoco/webhook` |
+| `PAYSTACK_SECRET_KEY` | Enables real card payments (`sk_live_…`). The webhook is verified with this same key — no separate webhook secret. | Paystack Dashboard → Settings → API Keys & Webhooks |
 | `BREVO_API_KEY` | Transactional emails (`xkeysib-…`) | Brevo → SMTP & API → API keys |
 | `BREVO_SENDER_EMAIL` | The "from" address (default `ripponluke@gmail.com`) | must be a **verified sender** in Brevo |
 | `ORDER_NOTIFY_EMAIL` | Where Luke's "new order" mails go (default `ripponluke@gmail.com`) | — |
@@ -50,14 +50,23 @@ session secret, login-fail counters. No external database needed.
 
 After adding variables: **Deploys → Trigger deploy** so functions pick them up.
 
+**Paystack webhook:** Paystack Dashboard → Settings → API Keys & Webhooks → set
+**Live Webhook URL** to `https://lukesgoodlifestyle.com/api/paystack/webhook`
+(set the **Test Webhook URL** to the same if testing with an `sk_test_…` key).
+Paystack signs each event with HMAC-SHA512 of the secret key; unsigned or
+mis-signed events are rejected with 401.
+
 ### Payment behaviour
-- **With `YOCO_SECRET_KEY`:** checkout → Yoco hosted payment page → webhook marks
-  the order *Pending (paid)*, decrements stock, emails the customer a confirmation
-  and Luke a "new PAID order" alert. Success returns to the site with a
-  confirmation modal.
+- **With `PAYSTACK_SECRET_KEY`:** checkout → Paystack hosted payment page (ZAR)
+  → the `charge.success` webhook marks the order *Pending (paid)*, decrements
+  stock, emails the customer a confirmation and Luke a "new PAID order" alert.
+  Paystack then returns the customer to the site (`/?payment=success&order=…`),
+  where the page calls `/api/paystack/verify` with the reference as a
+  belt-and-braces check — if the webhook hasn't arrived yet, verify marks the
+  order paid itself (both paths are idempotent).
 - **Without it (current):** orders are recorded as manual/unpaid, stock is
   reserved, both emails still send (once Brevo is configured), and Luke arranges
-  payment on WhatsApp. The site is fully usable pre-Yoco.
+  payment on WhatsApp. The site is fully usable pre-Paystack.
 
 ### Emails sent via Brevo
 1. Order received / payment confirmed → customer
@@ -88,8 +97,9 @@ After adding variables: **Deploys → Trigger deploy** so functions pick them up
    - apex `lukesgoodlifestyle.com` → **A 75.2.60.5** (Netlify load balancer)
    - `www` → **CNAME lukesgoodlifestyle.netlify.app**
 3. HTTPS is automatic (Let's Encrypt) a few minutes after DNS propagates.
-4. If the Yoco webhook was registered on the netlify.app URL, update it to
-   `https://lukesgoodlifestyle.com/api/yoco/webhook`.
+4. If the Paystack webhook was registered on the netlify.app URL, update it to
+   `https://lukesgoodlifestyle.com/api/paystack/webhook` (Paystack Dashboard →
+   Settings → API Keys & Webhooks).
 
 ## Local dev
 Serve the folder with any static server (e.g. `python -m http.server 8080`).
