@@ -74,10 +74,21 @@ mis-signed events are rejected with 401.
 3. Order shipped → customer (when Luke clicks *Mark shipped*)
 
 ## Performance
-- Media: 45MB → ~6MB total. Initial page transfer ≈ 1MB; videos lazy-load with
-  posters (`preload="none"` + IntersectionObserver) and only play on screen.
+- Total media ~2.9MB (from 45MB originally). Images are WebP sized to their
+  display size; videos are H.264, 30fps, 480p (640x360 for work-1), CRF 32,
+  `+faststart`, no audio, each 0.4-0.8MB with an ~8KB poster frame.
+- Videos: nothing video-related blocks first paint. After the page `load`
+  event, any video within ~1.5 screens starts buffering (skipped on Data
+  Saver), so it is already playing when it scrolls into view; off-screen
+  videos pause. The hero's blurred backdrop is a still frame, not a second
+  video decode.
+- React 18.3.1 is self-hosted in `vendor/` (same SRI hashes as the runtime
+  expects), preloaded, and cached for a year. No third-party script origins.
+- Fonts: Anton + Archivo via Google Fonts with `display=swap`; Caveat is
+  requested only for the glyphs in "I'm Luke".
 - Result photos smart-cropped (face detection) to the exact 3:4 display ratio.
-- Preloaded hero image, preconnected fonts, deferred GTM.
+- Tested in real Chrome on a throttled 4G profile: every video plays within
+  ~0.5s of scrolling to it, on desktop and mobile.
 
 ## SEO
 - Title/description/canonical, Open Graph + Twitter cards (`assets/og-image.jpg`),
