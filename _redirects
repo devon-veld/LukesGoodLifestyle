@@ -1,4 +1,6 @@
-# API -> Netlify Functions (must precede the SPA catch-all)
+# Rules are matched top to bottom; the first match wins.
+
+# API -> Netlify Functions
 /api/auth              /.netlify/functions/auth              200
 /api/store             /.netlify/functions/storeapi          200
 /api/orders            /.netlify/functions/orders            200
@@ -6,4 +8,47 @@
 /api/paystack/webhook  /.netlify/functions/paystack-webhook  200
 /api/paystack/verify   /.netlify/functions/paystack-verify   200
 
-/*  /index.html  200
+# Pages (build.js writes one HTML file per page with its own title and meta)
+/shop       /shop.html       200
+/results    /results.html    200
+/training   /training.html   200
+/terms      /terms.html      200
+/privacy    /privacy.html    200
+/shipping   /shipping.html   200
+/admin      /admin.html      200
+
+# Old Shopify URLs -> new pages (permanent, so Google moves rankings across)
+/products/lukes-good-gold-capsules            /shop       301
+/products/lukes-good-gold-powder              /shop       301
+/products/gg-cellular-health-energy-support   /shop       301
+/products/group-training-sessions             /training   301
+/products/hyper-trophy-program                /training   301
+/products/lean-muscle-meals                   /training   301
+/products/*                                   /shop       301
+/products                                     /shop       301
+/collections/supplements                      /shop       301
+/collections/coaching                         /training   301
+/collections/digital-products                 /training   301
+/collections/*                                /shop       301
+/collections                                  /shop       301
+/cart/*                                       /shop       301
+/cart                                         /shop       301
+/checkouts/*                                  /shop       301
+/policies/privacy-policy                      /privacy    301
+/policies/terms-of-service                    /terms      301
+/policies/shipping-policy                     /shipping   301
+/policies/*                                   /terms      301
+/pages/*                                      /           301
+/blogs/*                                      /           301
+/blogs                                        /           301
+/account/*                                    /           301
+/account                                      /           301
+/search                                       /           301
+/agents.md                                    /           301
+/sitemap_agentic_discovery.xml                /sitemap.xml  301
+/sitemap_products_1.xml                       /sitemap.xml  301
+/sitemap_pages_1.xml                          /sitemap.xml  301
+/sitemap_collections_1.xml                    /sitemap.xml  301
+/sitemap_blogs_1.xml                          /sitemap.xml  301
+
+# Anything else: Netlify serves /404.html with a 404 status (no catch-all rule).

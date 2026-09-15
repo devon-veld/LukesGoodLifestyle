@@ -1,7 +1,6 @@
-# Netlify — Luke's Good Lifestyle (static design site)
-# The build copies the static files into dist/. This matches BOTH possible
-# Netlify configs (UI-saved "npm run build" + dist from the earlier Vite
-# import, and this toml), so every deploy publishes the design.
+# Netlify: Luke's Good Lifestyle
+# Page URLs, old Shopify redirects and API routes live in _redirects.
+# Unknown paths fall through to 404.html with a real 404 status.
 [build]
   command = "npm run build"
   publish = "dist"
@@ -9,13 +8,6 @@
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
-
-# Single-page app: serve index.html for every route.
-# (Functions declare their own /api/* paths and are matched before this.)
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
 
 [[headers]]
   for = "/*"
@@ -35,3 +27,8 @@
   for = "/vendor/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/admin"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"

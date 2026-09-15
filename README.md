@@ -1,130 +1,142 @@
-# Luke's Good Lifestyle — lukesgoodlifestyle.com
+# Luke's Good Lifestyle: lukesgoodlifestyle.com
 
-The production site: static design front-end + Netlify Functions backend
-(orders, payments, emails, admin auth) on Netlify Blobs storage.
+Personal trainer site and supplement shop for Luke Rippon (Pretoria). Static
+front-end built from a design export, with Netlify Functions for orders,
+Paystack payments, order emails and the admin dashboard. Storage is Netlify
+Blobs, so there is no separate database.
 
-## Architecture
+## Project layout
 
 ```
-index.html            the design (data-driven single page: home/shop/results/training/admin)
-support.js            design runtime
-assets/               WebP images (smart-cropped), 720p videos + posters, og-image
-build.js              npm run build -> copies site into dist/
+index.html              The whole app: design template (<x-dc>), app logic, head tags,
+                        and the lgl-routes JSON that defines every page URL + SEO copy
+support.js              Design runtime that renders index.html's template with React
+vendor/                 React 18.3.1 builds (self-hosted, SRI-pinned)
+assets/                 WebP images, H.264 videos + poster frames, og-image.jpg
+404.html                Branded not-found page, served with a real 404 status
+_redirects              API routes, page URLs, old Shopify URL redirects
+robots.txt              Crawler rules
+build.js                npm run build -> dist/ (one HTML file per page + sitemap.xml)
+netlify.toml            Build, functions and response headers
 netlify/functions/
-  auth.mjs            /api/auth      admin password: first-run setup, login, logout, change
-  storeapi.mjs        /api/store     GET catalog+special (public) · PUT updates (admin)
-  orders.mjs          /api/orders    GET list · ship / delete (admin)
-  checkout.mjs        /api/checkout  server-priced order -> Paystack transaction (or manual fallback)
-  paystack-webhook.mjs /api/paystack/webhook  charge.success -> mark paid, stock, emails
-  paystack-verify.mjs  /api/paystack/verify   success-page fallback: verify reference -> mark paid
-  lib/util.mjs        blobs (strong consistency), scrypt, sessions, rate-limit, SMTP email, pricing, markOrderPaid
+  auth.mjs              /api/auth              admin password: first-run setup, login, logout, change
+  storeapi.mjs          /api/store             catalog + special bar (GET public, PUT admin)
+  orders.mjs            /api/orders            list, ship, delete, send test email (admin)
+  checkout.mjs          /api/checkout          server-priced order -> Paystack transaction
+  paystack-webhook.mjs  /api/paystack/webhook  charge.success -> mark paid, stock, emails
+  paystack-verify.mjs   /api/paystack/verify   return-page check if the webhook is slow
+  lib/util.mjs          Blobs store, pricing, scrypt passwords, sessions, rate limit, SMTP email
 ```
 
-**Storage:** Netlify Blobs (store `lgl`) — catalog/special, orders, password hash,
-session secret, login-fail counters. No external database needed.
+## Pages and URLs
 
-## Admin (`Admin login` link in the footer)
+Each page has its own URL, title, description, canonical tag and structured
+data. `build.js` writes a separate HTML file per page, so crawlers get the right
+head tags before any JavaScript runs; in the browser, links switch pages without
+a reload and update the address bar and head tags.
 
-- First visit ever: **create password** (min 10 chars) → signed in.
-- After that: password login. 8 wrong attempts = 15-minute lockout.
-- Sessions: HMAC-signed token, httpOnly/Secure/SameSite=Strict cookie, 7 days.
-- Passwords: scrypt-hashed (never stored in plain text).
-- Dashboard: revenue + orders (live), edit prices/sale/stock (updates the shop
-  instantly), publish/toggle the yellow special bar, mark orders shipped,
-  delete orders, **change password**, sign out.
-
-> **HANDOVER:** the current admin password is `GoodGold2026!Train` (set during
-> testing). Log in and change it in the Account panel immediately — after that,
-> only Luke knows it.
-
-## Go-live checklist (Netlify → Site configuration → Environment variables)
-
-| Variable | Purpose | Where to get it |
+| Page | URL | In sitemap |
 |---|---|---|
-| `PAYSTACK_SECRET_KEY` | Enables real card payments (`sk_live_…`). The webhook is verified with this same key — no separate webhook secret. | Paystack Dashboard → Settings → API Keys & Webhooks |
-| `SMTP_PASS` | Password of the `luke@lukesgoodlifestyle.com` mailbox. Turns on order emails. | GoDaddy email login |
-| `SMTP_USER` | optional: mailbox that sends (and the From address). Default `luke@lukesgoodlifestyle.com` | — |
-| `SMTP_HOST` / `SMTP_PORT` | optional: default `smtpout.secureserver.net` / `465` (GoDaddy) | — |
-| `ORDER_NOTIFY_EMAIL` | optional: where new-order alerts go. Default `luke@lukesgoodlifestyle.com` | — |
-| `ADMIN_SETUP_CODE` | optional: extra code required for first-run password setup | choose any value |
-| `AUTH_SECRET` | optional: fixed session-signing secret (else auto-generated) | any long random string |
+| Home | `/` | yes |
+| Shop | `/shop` | yes |
+| Results | `/results` | yes |
+| Training plans | `/training` | yes |
+| Terms & Conditions | `/terms` | yes |
+| Privacy Policy | `/privacy` | yes |
+| Shipping Policy | `/shipping` | yes |
+| Admin | `/admin` | no (`noindex`) |
 
-After adding variables: **Deploys → Trigger deploy** so functions pick them up.
+To change a page's title or description, edit the `lgl-routes` JSON near the
+top of `index.html`. The sitemap is generated from the same list.
 
-**Paystack webhook:** Paystack Dashboard → Settings → API Keys & Webhooks → set
-**Live Webhook URL** to `https://lukesgoodlifestyle.com/api/paystack/webhook`
-(set the **Test Webhook URL** to the same if testing with an `sk_test_…` key).
-Paystack signs each event with HMAC-SHA512 of the secret key; unsigned or
-mis-signed events are rejected with 401.
+Old Shopify URLs (`/products/*`, `/collections/*`, `/policies/*`, `/pages/*`,
+`/blogs/*`, `/cart`, `/account`, Shopify sitemaps) redirect permanently (301) to
+the closest new page; see `_redirects`. Any other unknown URL gets `404.html`.
 
-### Payment behaviour
-- **With `PAYSTACK_SECRET_KEY`:** checkout → Paystack hosted payment page (ZAR)
-  → the `charge.success` webhook marks the order *Pending (paid)*, decrements
-  stock, emails the customer a confirmation and Luke a "new PAID order" alert.
-  Paystack then returns the customer to the site (`/?payment=success&order=…`),
-  where the page calls `/api/paystack/verify` with the reference as a
-  belt-and-braces check — if the webhook hasn't arrived yet, verify marks the
-  order paid itself (both paths are idempotent).
-- **Without it (current):** orders are recorded as manual/unpaid, stock is
-  reserved, both emails still send (once `SMTP_PASS` is set), and Luke arranges
-  payment on WhatsApp. The site is fully usable pre-Paystack.
+## Admin
 
-### Order emails (SMTP, from luke@lukesgoodlifestyle.com)
-Sent by the Netlify Functions through GoDaddy's mail server, signed in as
-`luke@lukesgoodlifestyle.com`.
-1. Payment confirmed → customer: items, quantities, discount, total, delivery address
-2. New paid order → Luke (`ORDER_NOTIFY_EMAIL`), with reply-to set to the customer
-3. Order shipped → customer (when Luke clicks *Mark shipped*)
+Footer → **Admin login** (`/admin`).
 
-Admin → Account → **Send test email** sends a sample to Luke's inbox and shows
-the mail server's error if sending fails. If Luke changes the mailbox password,
-update `SMTP_PASS` in Netlify and redeploy, or order emails stop.
+- First visit ever: create a password (10+ characters). After that: log in.
+- 8 wrong attempts from one IP address locks that address out for 15 minutes.
+- Passwords are scrypt-hashed; sessions are HMAC-signed httpOnly cookies (7 days).
+- Dashboard: revenue and orders, prices/sale/stock (updates the shop instantly),
+  the yellow special bar, mark shipped, delete orders, change password, sign out,
+  and **Send test email**.
+
+Never write the admin password in this repository. The repository is public.
+
+## Environment variables (Netlify → Site configuration → Environment variables)
+
+| Variable | Purpose |
+|---|---|
+| `PAYSTACK_SECRET_KEY` | Live secret key (`sk_live_…`). Turns on card payments and verifies webhooks. |
+| `SMTP_PASS` | Password of `luke@lukesgoodlifestyle.com`. Turns on order emails. |
+| `SMTP_USER` | Optional. Sending mailbox and From address. Default `luke@lukesgoodlifestyle.com`. |
+| `SMTP_HOST` / `SMTP_PORT` | Optional. Default `smtpout.secureserver.net` / `465` (GoDaddy). |
+| `ORDER_NOTIFY_EMAIL` | Optional. Where new-order alerts go. Default `luke@lukesgoodlifestyle.com`. |
+| `ADMIN_SETUP_CODE` | Optional. Extra code required for first-run password setup. |
+| `AUTH_SECRET` | Optional. Fixed session-signing secret (otherwise generated and stored). |
+
+After changing variables: **Deploys → Trigger deploy**.
+
+Paystack Dashboard → Settings → API Keys & Webhooks → **Live Webhook URL**:
+`https://lukesgoodlifestyle.com/api/paystack/webhook`
+
+## Payments and emails
+
+Checkout prices the cart on the server, then sends the customer to Paystack's
+hosted page. The `charge.success` webhook (or `/api/paystack/verify` when the
+customer returns first) marks the order paid, reduces stock and sends:
+
+1. Payment confirmation → customer (items, discount, total, delivery address)
+2. New paid order → Luke, with reply-to set to the customer
+3. Order shipped → customer, when Luke clicks *Mark shipped*
+
+Emails go through GoDaddy's mail server as `luke@lukesgoodlifestyle.com`. A
+failed email never blocks a payment; the admin **Send test email** button shows
+the mail server's error. Without `PAYSTACK_SECRET_KEY`, orders are recorded as
+unpaid and Luke arranges payment on WhatsApp.
 
 ## Performance
-- Total media ~2.9MB (from 45MB originally). Images are WebP sized to their
-  display size; videos are H.264, 30fps, 480p (640x360 for work-1), CRF 32,
-  `+faststart`, no audio, each 0.4-0.8MB with an ~8KB poster frame.
-- Videos: nothing video-related blocks first paint. After the page `load`
-  event, any video within ~1.5 screens starts buffering (skipped on Data
-  Saver), so it is already playing when it scrolls into view; off-screen
-  videos pause. The hero's blurred backdrop is a still frame, not a second
-  video decode.
-- React 18.3.1 is self-hosted in `vendor/` (same SRI hashes as the runtime
-  expects), preloaded, and cached for a year. No third-party script origins.
-- Fonts: Anton + Archivo via Google Fonts with `display=swap`; Caveat is
-  requested only for the glyphs in "I'm Luke".
-- Result photos smart-cropped (face detection) to the exact 3:4 display ratio.
-- Tested in real Chrome on a throttled 4G profile: every video plays within
-  ~0.5s of scrolling to it, on desktop and mobile.
+
+- Media ~2.9MB total. Images are WebP at display size; result photos lazy-load.
+- Videos: H.264, 30fps, 480p, `+faststart`, ~8KB posters. They start buffering
+  after the page loads when within ~1.5 screens, and pause off-screen.
+- React is self-hosted and preloaded; fonts use `display=swap`, and the
+  handwriting font is subset to the letters in "I'm Luke".
 
 ## SEO
-- Title/description/canonical, Open Graph + Twitter cards (`assets/og-image.jpg`),
-  JSON-LD (HealthClub, both Products, FAQ), `robots.txt`, `sitemap.xml`.
-- **GTM:** edit `window.GTM_ID` in `index.html` (search `GTM-XXXXXXX`) to enable
-  analytics — it stays inert until a real ID is set, and loads after `load`.
-- All URLs already point at `https://lukesgoodlifestyle.com`. Once DNS is
-  live, submit the sitemap in Google Search Console.
 
-## Domain cutover (lukesgoodlifestyle.com)
-> Note: the domain currently serves the old Shopify site — switching DNS
-> replaces it with this site. Do this as a deliberate cutover with Luke.
-1. Netlify → Domain management → **Add a domain** → `lukesgoodlifestyle.com`
-   → set it as the **primary domain** (netlify.app then auto-redirects).
-2. At GoDaddy (where the domain and Luke's email live), change **only** the
-   website records:
-   - apex `lukesgoodlifestyle.com` → **A 75.2.60.5** (Netlify load balancer)
-   - `www` → **CNAME lukesgoodlifestyle.netlify.app**
+- Per page: title, description, canonical, `hreflang`, Open Graph and Twitter
+  tags, robots directive, JSON-LD (HealthClub everywhere, Products on `/` and
+  `/shop`, FAQ on `/training`).
+- `sitemap.xml` (generated) and `robots.txt`.
+- Google Tag Manager: replace `GTM-XXXXXXX` in `index.html` with the real
+  container ID. Until then nothing loads.
 
-   **Do not move the nameservers to Netlify DNS** and do not touch the MX or
-   TXT (SPF) records. Luke's mailbox and the order emails depend on them.
-3. HTTPS is automatic (Let's Encrypt) a few minutes after DNS propagates.
-4. If the Paystack webhook was registered on the netlify.app URL, update it to
-   `https://lukesgoodlifestyle.com/api/paystack/webhook` (Paystack Dashboard →
-   Settings → API Keys & Webhooks).
+## Domain (lukesgoodlifestyle.com)
 
-## Local dev
-Serve the folder with any static server (e.g. `python -m http.server 8080`).
-The admin needs the deployed backend; locally it shows "backend unavailable".
-Every push to `main` auto-deploys.
+The domain and Luke's mailbox are at GoDaddy.
 
-Contact: WhatsApp 073 028 3066 · ripponluke@gmail.com · @lukesgoodlifestyle
+1. Netlify → Domain management → **Add a domain** → `lukesgoodlifestyle.com`,
+   and add `www.lukesgoodlifestyle.com`. Set `lukesgoodlifestyle.com` as the
+   **primary domain** (the netlify.app and www addresses then redirect to it).
+2. GoDaddy → DNS: change **only** these two records:
+   - `A` record for `@` → `75.2.60.5` (replaces Shopify's `23.227.38.32`)
+   - `CNAME` for `www` → `lukesgoodlifestyle.netlify.app` (replaces `shops.myshopify.com`)
+
+   Do not move the nameservers and do not touch the MX or TXT (SPF) records;
+   Luke's mailbox and the order emails depend on them.
+3. Netlify issues the HTTPS certificate automatically once DNS resolves.
+4. In Shopify, remove the domain (Settings → Domains) so it stops claiming it.
+5. Google Search Console: add the domain property, then submit
+   `https://lukesgoodlifestyle.com/sitemap.xml`.
+
+## Local development
+
+`npm run build` writes `dist/`. Plain static servers ignore `_redirects`, so use
+the Netlify CLI (`npx netlify dev`) to run pages, redirects and functions together.
+Every push to `main` deploys.
+
+Contact: WhatsApp 073 028 3066 · @lukesgoodlifestyle
