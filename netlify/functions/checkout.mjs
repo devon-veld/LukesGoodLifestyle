@@ -10,7 +10,7 @@
                                returning { demo:true } so the site still works. */
 import {
   json, store, readState, writeState, readOrders, writeOrders, priceCart,
-  sendEmail, orderEmailHtml, SITE_URL,
+  sendEmail, orderEmailHtml, SITE_URL, NOTIFY_EMAIL,
 } from './lib/util.mjs';
 
 async function nextOrderNumber() {
@@ -112,16 +112,18 @@ export default async (req) => {
   });
   await writeOrders(orders);
   await writeState(state);
-  await sendEmail({
-    to: customer.email, toName: customer.name,
-    subject: `Order ${order.id} received — Luke's Good Lifestyle`,
-    html: orderEmailHtml(order, 'Thanks for your order!', 'Luke will WhatsApp you to arrange payment and delivery. Now go smash a workout.'),
-  });
-  await sendEmail({
-    to: process.env.ORDER_NOTIFY_EMAIL || 'ripponluke@gmail.com', toName: 'Luke',
-    subject: `🛒 New order ${order.id} from ${customer.name} — ${order.total ? 'R' + order.total : ''}`,
-    html: orderEmailHtml(order, 'New order on the site!', `From ${customer.name} · ${customer.phone} · ${customer.email}. Payment not yet collected (Paystack not configured).`),
-  });
+  await Promise.all([
+    sendEmail({
+      to: customer.email, toName: customer.name,
+      subject: `Order ${order.id} received — Luke's Good Lifestyle`,
+      html: orderEmailHtml(order, 'Thanks for your order!', 'Luke will WhatsApp you to arrange payment and delivery. Now go smash a workout.'),
+    }),
+    sendEmail({
+      to: NOTIFY_EMAIL, toName: 'Luke', replyTo: customer.email,
+      subject: `🛒 New order ${order.id} from ${customer.name} — ${order.total ? 'R' + order.total : ''}`,
+      html: orderEmailHtml(order, 'New order on the site!', `From ${customer.name} · ${customer.phone} · ${customer.email}. Payment not yet collected (Paystack not configured).`),
+    }),
+  ]);
   return json({ demo: true, orderId: order.id });
 };
 

@@ -17,7 +17,7 @@ netlify/functions/
   checkout.mjs        /api/checkout  server-priced order -> Paystack transaction (or manual fallback)
   paystack-webhook.mjs /api/paystack/webhook  charge.success -> mark paid, stock, emails
   paystack-verify.mjs  /api/paystack/verify   success-page fallback: verify reference -> mark paid
-  lib/util.mjs        blobs (strong consistency), scrypt, sessions, rate-limit, Brevo, pricing, markOrderPaid
+  lib/util.mjs        blobs (strong consistency), scrypt, sessions, rate-limit, SMTP email, pricing, markOrderPaid
 ```
 
 **Storage:** Netlify Blobs (store `lgl`) — catalog/special, orders, password hash,
@@ -42,9 +42,10 @@ session secret, login-fail counters. No external database needed.
 | Variable | Purpose | Where to get it |
 |---|---|---|
 | `PAYSTACK_SECRET_KEY` | Enables real card payments (`sk_live_…`). The webhook is verified with this same key — no separate webhook secret. | Paystack Dashboard → Settings → API Keys & Webhooks |
-| `BREVO_API_KEY` | Transactional emails (`xkeysib-…`) | Brevo → SMTP & API → API keys |
-| `BREVO_SENDER_EMAIL` | The "from" address (default `ripponluke@gmail.com`) | must be a **verified sender** in Brevo |
-| `ORDER_NOTIFY_EMAIL` | Where Luke's "new order" mails go (default `ripponluke@gmail.com`) | — |
+| `SMTP_PASS` | Password of the `luke@lukesgoodlifestyle.com` mailbox. Turns on order emails. | GoDaddy email login |
+| `SMTP_USER` | optional: mailbox that sends (and the From address). Default `luke@lukesgoodlifestyle.com` | — |
+| `SMTP_HOST` / `SMTP_PORT` | optional: default `smtpout.secureserver.net` / `465` (GoDaddy) | — |
+| `ORDER_NOTIFY_EMAIL` | optional: where new-order alerts go. Default `luke@lukesgoodlifestyle.com` | — |
 | `ADMIN_SETUP_CODE` | optional: extra code required for first-run password setup | choose any value |
 | `AUTH_SECRET` | optional: fixed session-signing secret (else auto-generated) | any long random string |
 
@@ -65,13 +66,19 @@ mis-signed events are rejected with 401.
   belt-and-braces check — if the webhook hasn't arrived yet, verify marks the
   order paid itself (both paths are idempotent).
 - **Without it (current):** orders are recorded as manual/unpaid, stock is
-  reserved, both emails still send (once Brevo is configured), and Luke arranges
+  reserved, both emails still send (once `SMTP_PASS` is set), and Luke arranges
   payment on WhatsApp. The site is fully usable pre-Paystack.
 
-### Emails sent via Brevo
-1. Order received / payment confirmed → customer
-2. New order alert → Luke (`ORDER_NOTIFY_EMAIL`)
+### Order emails (SMTP, from luke@lukesgoodlifestyle.com)
+Sent by the Netlify Functions through GoDaddy's mail server, signed in as
+`luke@lukesgoodlifestyle.com`.
+1. Payment confirmed → customer: items, quantities, discount, total, delivery address
+2. New paid order → Luke (`ORDER_NOTIFY_EMAIL`), with reply-to set to the customer
 3. Order shipped → customer (when Luke clicks *Mark shipped*)
+
+Admin → Account → **Send test email** sends a sample to Luke's inbox and shows
+the mail server's error if sending fails. If Luke changes the mailbox password,
+update `SMTP_PASS` in Netlify and redeploy, or order emails stop.
 
 ## Performance
 - Total media ~2.9MB (from 45MB originally). Images are WebP sized to their
@@ -103,10 +110,13 @@ mis-signed events are rejected with 401.
 > replaces it with this site. Do this as a deliberate cutover with Luke.
 1. Netlify → Domain management → **Add a domain** → `lukesgoodlifestyle.com`
    → set it as the **primary domain** (netlify.app then auto-redirects).
-2. At the domain registrar, either move nameservers to Netlify DNS
-   (simplest), or set records manually:
+2. At GoDaddy (where the domain and Luke's email live), change **only** the
+   website records:
    - apex `lukesgoodlifestyle.com` → **A 75.2.60.5** (Netlify load balancer)
    - `www` → **CNAME lukesgoodlifestyle.netlify.app**
+
+   **Do not move the nameservers to Netlify DNS** and do not touch the MX or
+   TXT (SPF) records. Luke's mailbox and the order emails depend on them.
 3. HTTPS is automatic (Let's Encrypt) a few minutes after DNS propagates.
 4. If the Paystack webhook was registered on the netlify.app URL, update it to
    `https://lukesgoodlifestyle.com/api/paystack/webhook` (Paystack Dashboard →

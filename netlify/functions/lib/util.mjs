@@ -1,6 +1,7 @@
 /* Shared helpers for the Luke's Good Lifestyle backend (Netlify Functions v2). */
 import { getStore } from '@netlify/blobs';
 import { scryptSync, randomBytes, createHmac, timingSafeEqual } from 'node:crypto';
+import nodemailer from 'nodemailer';
 
 /* Local-test store: set LGL_LOCAL_STORE=1 to swap Netlify Blobs for an
    in-memory Map (same subset of the API the functions use). */
@@ -142,23 +143,55 @@ export async function recordLogin(req, success) {
   await store().setJSON(key, f);
 }
 
-/* ---------------- Brevo transactional email ---------------- */
-export async function sendEmail({ to, toName, subject, html }) {
-  const key = process.env.BREVO_API_KEY;
-  if (!key || !to) return { skipped: true };
-  try {
-    const res = await fetch('https://api.brevo.com/v3/smtp/email', {
-      method: 'POST',
-      headers: { 'api-key': key, 'content-type': 'application/json' },
-      body: JSON.stringify({
-        sender: { name: "Luke's Good Lifestyle", email: process.env.BREVO_SENDER_EMAIL || 'ripponluke@gmail.com' },
-        to: [{ email: to, name: toName || to }],
-        subject,
-        htmlContent: html,
-      }),
+/* ---------------- Transactional email (SMTP) ----------------
+   Sent through the domain's own mail host (GoDaddy) as luke@lukesgoodlifestyle.com.
+   The domain's SPF record only authorises GoDaddy, so the From address must be
+   the authenticated mailbox. Never throws: a failed email must not break a
+   checkout or a payment webhook. */
+export const NOTIFY_EMAIL = process.env.ORDER_NOTIFY_EMAIL || 'luke@lukesgoodlifestyle.com';
+const SMTP_USER = process.env.SMTP_USER || 'luke@lukesgoodlifestyle.com';
+
+let transporter = null;
+function mailer() {
+  if (!process.env.SMTP_PASS) return null;
+  if (!transporter) {
+    const port = Number(process.env.SMTP_PORT || 465);
+    transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'smtpout.secureserver.net',
+      port,
+      secure: process.env.SMTP_SECURE ? process.env.SMTP_SECURE === 'true' : port === 465,
+      auth: { user: SMTP_USER, pass: process.env.SMTP_PASS },
+      connectionTimeout: 8000,
+      greetingTimeout: 8000,
+      socketTimeout: 12000,
     });
-    return { ok: res.ok, status: res.status };
-  } catch (e) { return { ok: false, error: String(e) }; }
+  }
+  return transporter;
+}
+
+const htmlToText = (h) => String(h)
+  .replace(/<br\s*\/?>/gi, '\n').replace(/<\/(p|h2|tr|div)>/gi, '\n')
+  .replace(/<[^>]+>/g, ' ')
+  .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+  .replace(/[ \t]+/g, ' ').replace(/\n\s+/g, '\n').trim();
+
+export async function sendEmail({ to, toName, subject, html, replyTo }) {
+  const t = mailer();
+  if (!t || !to) return { skipped: true };
+  try {
+    const info = await t.sendMail({
+      from: { name: "Luke's Good Lifestyle", address: SMTP_USER },
+      to: toName ? { name: toName, address: to } : to,
+      replyTo,
+      subject,
+      html,
+      text: htmlToText(html),
+    });
+    return { ok: true, id: info.messageId };
+  } catch (e) {
+    console.error('email failed', { to, subject, error: e.message });
+    return { ok: false, error: e.message };
+  }
 }
 
 export const R = (n) => 'R' + Number(n || 0).toLocaleString('en-ZA');
@@ -193,7 +226,7 @@ export function orderEmailHtml(order, heading, intro) {
    whichever arrives first. Finds the order by its Paystack reference (falling
    back to paymentInfo.orderId), and only acts if it is still 'Awaiting
    payment'. Sets status 'Pending' (paid, awaiting shipment), decrements stock
-   and sends the two Brevo emails. Returns the order, or null if not found. */
+   and sends the two order emails. Returns the order, or null if not found. */
 export async function markOrderPaid(reference, paymentInfo = {}) {
   const orders = await readOrders();
   let o = reference ? orders.find((x) => x.reference === reference) : null;
@@ -216,15 +249,17 @@ export async function markOrderPaid(reference, paymentInfo = {}) {
   });
   await writeState(state);
 
-  await sendEmail({
-    to: o.customer.email, toName: o.customer.name,
-    subject: `Payment received — order ${o.id} confirmed ✅`,
-    html: orderEmailHtml(o, 'Payment received — you legend!', "Your order is confirmed and Luke is packing it. You'll get courier tracking on WhatsApp. Now go smash a workout."),
-  });
-  await sendEmail({
-    to: process.env.ORDER_NOTIFY_EMAIL || 'ripponluke@gmail.com', toName: 'Luke',
-    subject: `💰 PAID — order ${o.id} from ${o.customer.name} (R${o.total})`,
-    html: orderEmailHtml(o, 'New PAID order!', `${o.customer.name} · ${o.customer.phone} · ${o.customer.email}. Pack it and mark it shipped in the admin.`),
-  });
+  await Promise.all([
+    sendEmail({
+      to: o.customer.email, toName: o.customer.name,
+      subject: `Payment received — order ${o.id} confirmed ✅`,
+      html: orderEmailHtml(o, 'Payment received — you legend!', "Your order is confirmed and Luke is packing it. You'll get courier tracking on WhatsApp. Now go smash a workout."),
+    }),
+    sendEmail({
+      to: NOTIFY_EMAIL, toName: 'Luke', replyTo: o.customer.email,
+      subject: `💰 PAID — order ${o.id} from ${o.customer.name} (R${o.total})`,
+      html: orderEmailHtml(o, 'New PAID order!', `${o.customer.name} · ${o.customer.phone} · ${o.customer.email}. Pack it and mark it shipped in the admin.`),
+    }),
+  ]);
   return o;
 }
