@@ -11,7 +11,7 @@ const out = path.join(root, 'dist');
 fs.rmSync(out, { recursive: true, force: true });
 fs.mkdirSync(out, { recursive: true });
 
-for (const item of ['support.js', 'vendor', 'assets', '404.html', '_redirects', 'robots.txt']) {
+for (const item of ['support.js', 'vendor', 'assets', '404.html', '_redirects', 'robots.txt', 'favicon.ico']) {
   fs.cpSync(path.join(root, item), path.join(out, item), { recursive: true });
 }
 
