@@ -37,9 +37,31 @@ export const DEFAULT_STATE = {
   special: { active: true, text: "WINTER SALE, Luke's Good Gold now R299 (was R399). Limited stock!" },
 };
 
+/* Repairs product text that lost characters (shows as U+FFFD) before this
+   data was written. Only the built-in products can be restored exactly, from
+   DEFAULT_STATE; anything else is left for the admin to retype. */
+function repairProductText(state) {
+  let changed = false;
+  for (const p of state.products || []) {
+    const base = DEFAULT_STATE.products.find((d) => d.id === p.id);
+    if (!base) continue;
+    for (const field of ['name', 'tag']) {
+      if (typeof p[field] === 'string' && p[field].includes('�')) {
+        p[field] = base[field];
+        changed = true;
+      }
+    }
+  }
+  return changed;
+}
+
 export async function readState() {
   const s = await store().get('state', { type: 'json' });
-  return s && s.products ? s : structuredClone(DEFAULT_STATE);
+  if (!s || !s.products) return structuredClone(DEFAULT_STATE);
+  if (repairProductText(s)) {
+    try { await store().setJSON('state', s); } catch (e) { console.error('repair write failed', e.message); }
+  }
+  return s;
 }
 export async function writeState(state) { await store().setJSON('state', state); }
 
