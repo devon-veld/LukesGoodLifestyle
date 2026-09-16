@@ -12,7 +12,7 @@ const localStore = {
     const v = localData.get(key);
     return opts && opts.type === 'json' ? JSON.parse(v) : v;
   },
-  async set(key, value) { localData.set(key, String(value)); },
+  async set(key, value) { localData.set(key, value); },
   async setJSON(key, obj) { localData.set(key, JSON.stringify(obj)); },
 };
 

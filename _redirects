@@ -7,6 +7,8 @@
 /api/checkout          /.netlify/functions/checkout          200
 /api/paystack/webhook  /.netlify/functions/paystack-webhook  200
 /api/paystack/verify   /.netlify/functions/paystack-verify   200
+/api/product-image     /.netlify/functions/product-image     200
+/api/img               /.netlify/functions/img               200
 
 # Pages (build.js writes one HTML file per page with its own title and meta)
 /shop       /shop.html       200
