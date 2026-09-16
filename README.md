@@ -60,7 +60,10 @@ Footer → **Admin login** (`/admin`).
 - First visit ever: create a password (10+ characters). After that: log in.
 - 8 wrong attempts from one IP address locks that address out for 15 minutes.
 - Passwords are scrypt-hashed; sessions are HMAC-signed httpOnly cookies (7 days).
-- Dashboard: revenue and orders, prices/sale/stock (updates the shop instantly),
+- Orders: every order, filtered by status and by date (quick ranges or custom
+  dates). Click an order for customer details, items, payment reference and
+  timeline, with WhatsApp/email buttons, Mark shipped and Delete.
+- Dashboard: revenue, prices/sale/stock (updates the shop instantly),
   the yellow special bar, mark shipped, delete orders, change password, sign out,
   and **Send test email**.
 

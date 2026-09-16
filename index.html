@@ -168,6 +168,33 @@
    Below 1100px his column starts under the headline, so it keeps the design offset. */
 @media (min-width: 1100px) { .rheroimg { margin-top: -290px !important; } }
 @media (min-width: 1280px) { .rheroimg { margin-top: -340px !important; } }
+/* Admin dashboard on phones */
+.radm-field { display: block; }
+.radm-flabel { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (max-width: 760px) {
+  .radm-stats { grid-template-columns: 1fr 1fr !important; gap: 12px !important; }
+  .radm-split { grid-template-columns: 1fr !important; }
+  .radm-phead { display: none !important; }
+  .radm-prow { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 10px !important; }
+  .radm-prow > :first-child { display: none !important; }
+  .radm-prow > :nth-child(2), .radm-prow > :last-child { grid-column: 1 / -1; }
+  .radm-prow .radm-flabel { position: static; width: auto; height: auto; overflow: visible; clip: auto; display: block; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: #8F8F82; margin-bottom: 6px; }
+  .radm-prow input { width: 100% !important; box-sizing: border-box; font-size: 16px !important; }
+}
+/* Admin orders: the table becomes stacked cards on narrow screens */
+@media (max-width: 760px) {
+  .rordhead { display: none !important; }
+  .rordrow { grid-template-columns: 1fr auto !important; gap: 6px 12px !important; }
+  .rordrow .rord-id { grid-column: 1; grid-row: 1; }
+  .rordrow .rord-total { grid-column: 2; grid-row: 1; text-align: right; }
+  .rordrow .rord-cust { grid-column: 1; grid-row: 2; }
+  .rordrow .rord-date { grid-column: 2; grid-row: 2; text-align: right; }
+  .rordrow .rord-items { grid-column: 1 / -1; grid-row: 3; }
+  .rordrow .rord-status { grid-column: 1; grid-row: 4; }
+  .rordrow .rord-act { grid-column: 2; grid-row: 4; }
+  .rordgrid { grid-template-columns: 1fr !important; }
+  .rorddlg { padding: 20px !important; }
+}
 /* Mobile polish (audit fixes) */
 .mnav-burger { display: none; background: none; border: 1px solid #3A3A30; border-radius: 10px; width: 44px; height: 44px; cursor: pointer; padding: 0; }
 .mnav-burger span { display: block; width: 18px; height: 2px; background: #FAFAF0; margin: 4px auto; border-radius: 2px; transition: transform .25s, opacity .25s; }
@@ -784,7 +811,7 @@
       <sc-if value="{{ adminReady }}" hint-placeholder-val="{{ true }}">
 
       <!-- STATS -->
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:32px">
+      <div class="radm-stats" style="display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:32px">
         <div style="background:#F2E635;color:#131313;border-radius:14px;padding:22px">
           <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;opacity:0.7">Revenue · {{ monthLabel }}</div>
           <div style="font-family:'Anton',sans-serif;font-size:36px;margin-top:6px">{{ revenueLabel }}</div>
@@ -807,7 +834,7 @@
         </div>
       </div>
 
-      <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:20px;margin-top:20px">
+      <div class="radm-split" style="display:grid;grid-template-columns:1.4fr 1fr;gap:20px;margin-top:20px">
         <!-- SALES CHART -->
         <div style="background:#191916;border:1px solid #2A2A24;border-radius:14px;padding:24px">
           <div style="font-weight:800;font-size:14px;text-transform:uppercase;letter-spacing:0.08em">Sales, last 7 days</div>
@@ -836,19 +863,19 @@
       <!-- PRODUCTS TABLE -->
       <div style="background:#191916;border:1px solid #2A2A24;border-radius:14px;padding:24px;margin-top:20px">
         <div style="font-weight:800;font-size:14px;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:16px">Products</div>
-        <div style="display:grid;grid-template-columns:64px 1.6fr 1fr 1fr 0.8fr 1fr;gap:14px;align-items:center;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:#8F8F82;padding-bottom:10px;border-bottom:1px solid #2A2A24">
+        <div class="radm-phead" style="display:grid;grid-template-columns:64px 1.6fr 1fr 1fr 0.8fr 1fr;gap:14px;align-items:center;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:#8F8F82;padding-bottom:10px;border-bottom:1px solid #2A2A24">
           <div></div><div>Product</div><div>Price (R)</div><div>Sale price (R)</div><div>Stock</div><div>Sale live</div>
         </div>
         <sc-for list="{{ adminProducts }}" as="p" hint-placeholder-count="0">
-          <div style="display:grid;grid-template-columns:64px 1.6fr 1fr 1fr 0.8fr 1fr;gap:14px;align-items:center;padding:14px 0;border-bottom:1px solid #23231F">
+          <div class="radm-prow" style="display:grid;grid-template-columns:64px 1.6fr 1fr 1fr 0.8fr 1fr;gap:14px;align-items:center;padding:14px 0;border-bottom:1px solid #23231F">
             <div role="img" aria-label="{{ p.name }}" style="width:56px;height:56px;border-radius:8px;background-color:#FAFAF0;background-image:url('{{ p.img }}');background-size:cover;background-position:center"></div>
             <div>
               <div style="font-weight:800;font-size:15px">{{ p.name }}</div>
               <div style="color:#8F8F82;font-size:12px">{{ p.tag }}</div>
             </div>
-            <input type="number" value="{{ p.price }}" onChange="{{ p.setPrice }}" style="background:#131313;border:1px solid #3A3A30;border-radius:8px;color:#FAFAF0;padding:10px;font-size:14px;width:90px">
-            <input type="number" value="{{ p.saleInput }}" onChange="{{ p.setSale }}" placeholder="—" style="background:#131313;border:1px solid #3A3A30;border-radius:8px;color:#F2E635;padding:10px;font-size:14px;width:90px">
-            <input type="number" value="{{ p.stock }}" onChange="{{ p.setStock }}" style="background:#131313;border:1px solid #3A3A30;border-radius:8px;color:#FAFAF0;padding:10px;font-size:14px;width:70px">
+            <label class="radm-field"><span class="radm-flabel">Price (R)</span><input type="number" value="{{ p.price }}" onChange="{{ p.setPrice }}" style="background:#131313;border:1px solid #3A3A30;border-radius:8px;color:#FAFAF0;padding:10px;font-size:14px;width:90px"></label>
+            <label class="radm-field"><span class="radm-flabel">Sale price (R)</span><input type="number" value="{{ p.saleInput }}" onChange="{{ p.setSale }}" placeholder="—" style="background:#131313;border:1px solid #3A3A30;border-radius:8px;color:#F2E635;padding:10px;font-size:14px;width:90px"></label>
+            <label class="radm-field"><span class="radm-flabel">Stock</span><input type="number" value="{{ p.stock }}" onChange="{{ p.setStock }}" style="background:#131313;border:1px solid #3A3A30;border-radius:8px;color:#FAFAF0;padding:10px;font-size:14px;width:70px"></label>
             <div style="display:flex;align-items:center;gap:10px">
               <div style="width:46px;height:26px;border-radius:999px;background:{{ p.toggleBg }};position:relative;cursor:pointer;transition:background 0.2s" onClick="{{ p.toggleSale }}">
                 <div style="position:absolute;top:3px;left:{{ p.knobLeft }};width:20px;height:20px;border-radius:999px;background:#FAFAF0;transition:left 0.2s"></div>
@@ -862,22 +889,52 @@
 
       <!-- ORDERS -->
       <div style="background:#191916;border:1px solid #2A2A24;border-radius:14px;padding:24px;margin-top:20px">
-        <div style="font-weight:800;font-size:14px;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:16px">Recent orders</div>
-        <div style="display:grid;grid-template-columns:0.8fr 1.4fr 2fr 0.8fr 1fr 1fr;gap:14px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:#8F8F82;padding-bottom:10px;border-bottom:1px solid #2A2A24">
-          <div>Order</div><div>Customer</div><div>Items</div><div>Total</div><div>Status</div><div></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+          <div style="font-weight:800;font-size:14px;text-transform:uppercase;letter-spacing:0.08em">Orders</div>
+          <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+            <div style="color:#8F8F82;font-size:13px">{{ ordSummary }}</div>
+            <div style="border:1px solid #3A3A30;color:#C9C9BC;padding:7px 14px;border-radius:999px;font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;cursor:pointer" style-hover="border-color:#F2E635;color:#F2E635" onClick="{{ refreshOrders }}">Refresh</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <sc-for list="{{ ordStatusFilters }}" as="f" hint-placeholder-count="4">
+            <div style="border:1px solid {{ f.border }};background:{{ f.bg }};color:{{ f.fg }};border-radius:999px;font-weight:800;cursor:pointer;white-space:nowrap;padding:8px 14px;font-size:12px" onClick="{{ f.pick }}">{{ f.label }}</div>
+          </sc-for>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+          <sc-for list="{{ ordRangeFilters }}" as="f" hint-placeholder-count="6">
+            <div style="border:1px solid {{ f.border }};background:{{ f.bg }};color:{{ f.fg }};border-radius:999px;font-weight:800;cursor:pointer;white-space:nowrap;padding:6px 12px;font-size:11px" onClick="{{ f.pick }}">{{ f.label }}</div>
+          </sc-for>
+        </div>
+        <sc-if value="{{ ordCustom }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center;color:#8F8F82;font-size:13px">
+            <span>From</span>
+            <input type="date" aria-label="From date" value="{{ ordFrom }}" onChange="{{ setOrdFrom }}" style="background:#131313;border:1px solid #3A3A30;border-radius:10px;color:#FAFAF0;padding:10px 12px;font-size:16px;color-scheme:dark">
+            <span>To</span>
+            <input type="date" aria-label="To date" value="{{ ordTo }}" onChange="{{ setOrdTo }}" style="background:#131313;border:1px solid #3A3A30;border-radius:10px;color:#FAFAF0;padding:10px 12px;font-size:16px;color-scheme:dark">
+          </div>
+        </sc-if>
+        <div class="rordhead" style="display:grid;grid-template-columns:0.7fr 1fr 1.3fr 2fr 0.7fr 1.2fr 1fr;gap:14px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:#8F8F82;padding:18px 0 10px;border-bottom:1px solid #2A2A24">
+          <div>Order</div><div>Date</div><div>Customer</div><div>Items</div><div>Total</div><div>Status</div><div></div>
         </div>
         <sc-for list="{{ orderRows }}" as="o" hint-placeholder-count="5">
-          <div style="display:grid;grid-template-columns:0.8fr 1.4fr 2fr 0.8fr 1fr 1fr;gap:14px;align-items:center;padding:13px 0;border-bottom:1px solid #23231F;font-size:14px">
-            <div style="font-weight:800;color:#F2E635">{{ o.id }}</div>
-            <div>{{ o.customer }}</div>
-            <div style="color:#C9C9BC;font-size:13px">{{ o.items }}</div>
-            <div style="font-weight:800">{{ o.total }}</div>
-            <div><span style="background:{{ o.statusBg }};color:{{ o.statusFg }};font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;padding:5px 10px;border-radius:999px">{{ o.status }}</span></div>
-            <sc-if value="{{ o.canShip }}" hint-placeholder-val="{{ false }}">
-              <div style="border:1px solid #3A3A30;color:#C9C9BC;padding:7px 14px;border-radius:999px;font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;cursor:pointer;text-align:center" style-hover="border-color:#F2E635;color:#F2E635" onClick="{{ o.ship }}">Mark shipped</div>
-            </sc-if>
+          <div class="rordrow" style="display:grid;grid-template-columns:0.7fr 1fr 1.3fr 2fr 0.7fr 1.2fr 1fr;gap:14px;align-items:center;padding:13px 0;border-bottom:1px solid #23231F;font-size:14px;cursor:pointer" style-hover="background:#1F1F1A" onClick="{{ o.open }}">
+            <div class="rord-id" style="font-weight:800;color:#F2E635">{{ o.id }}</div>
+            <div class="rord-date" style="color:#C9C9BC;font-size:13px">{{ o.date }}</div>
+            <div class="rord-cust">{{ o.customer }}</div>
+            <div class="rord-items" style="color:#C9C9BC;font-size:13px">{{ o.items }}</div>
+            <div class="rord-total" style="font-weight:800">{{ o.total }}</div>
+            <div class="rord-status"><span style="background:{{ o.statusBg }};color:{{ o.statusFg }};font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;padding:5px 10px;border-radius:999px;white-space:nowrap">{{ o.status }}</span></div>
+            <div class="rord-act">
+              <sc-if value="{{ o.canShip }}" hint-placeholder-val="{{ false }}">
+                <div style="border:1px solid #3A3A30;color:#C9C9BC;padding:7px 14px;border-radius:999px;font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;cursor:pointer;text-align:center;white-space:nowrap" style-hover="border-color:#F2E635;color:#F2E635" onClick="{{ o.ship }}">Mark shipped</div>
+              </sc-if>
+            </div>
           </div>
         </sc-for>
+        <sc-if value="{{ ordEmpty }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:28px 0;text-align:center;color:#8F8F82;font-size:14px">No orders match these filters. <span style="color:#F2E635;cursor:pointer;text-decoration:underline" onClick="{{ clearOrdFilters }}">Clear filters</span></div>
+        </sc-if>
       </div>
 
       <!-- ACCOUNT -->
@@ -1000,6 +1057,80 @@
   </sc-if>
 
   <!-- ============ CHECKOUT MODAL ============ -->
+  <!-- ORDER DETAIL (admin) -->
+  <sc-if value="{{ ordOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;z-index:120;display:flex;align-items:center;justify-content:center;padding:16px">
+      <div style="position:absolute;inset:0;background:rgba(0,0,0,0.7)" onClick="{{ closeOrder }}"></div>
+      <div class="rorddlg" role="dialog" aria-label="Order details" style="position:relative;width:660px;max-width:100%;max-height:92vh;overflow-y:auto;box-sizing:border-box;background:#191916;border:1px solid #2A2A24;border-radius:18px;padding:28px;animation:fadeUp 0.25s ease both">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+          <div>
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:#8F8F82">Order</div>
+            <div style="font-family:'Anton',sans-serif;font-size:34px;line-height:1.1;color:#F2E635">{{ odId }}</div>
+            <span style="display:inline-block;margin-top:8px;background:{{ odStatusBg }};color:{{ odStatusFg }};font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;padding:5px 10px;border-radius:999px">{{ odStatus }}</span>
+          </div>
+          <div aria-label="Close" style="width:40px;height:40px;flex:0 0 auto;border-radius:999px;border:1px solid #3A3A30;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px" style-hover="border-color:#F2E635;color:#F2E635" onClick="{{ closeOrder }}">✕</div>
+        </div>
+
+        <div class="rordgrid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:22px">
+          <div style="background:#131313;border:1px solid #2A2A24;border-radius:12px;padding:16px">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:#8F8F82">Customer</div>
+            <div style="font-weight:800;font-size:15px;margin-top:8px">{{ odName }}</div>
+            <div style="color:#C9C9BC;font-size:14px;margin-top:6px;line-height:1.6;word-break:break-word">{{ odPhone }}<br>{{ odEmail }}</div>
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:#8F8F82;margin-top:12px">Delivery address</div>
+            <div style="color:#C9C9BC;font-size:14px;margin-top:4px;line-height:1.5;white-space:pre-line">{{ odAddress }}</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
+              <sc-if value="{{ odHasPhone }}" hint-placeholder-val="{{ false }}">
+                <a class="od-wa" href="{{ odWhatsApp }}" target="_blank" rel="noopener" style="background:#F2E635;color:#131313;padding:9px 16px;border-radius:999px;font-weight:800;font-size:12px;text-transform:uppercase;text-decoration:none">WhatsApp</a>
+              </sc-if>
+              <sc-if value="{{ odHasEmail }}" hint-placeholder-val="{{ false }}">
+                <a class="od-mail" href="{{ odMailto }}" style="border:1px solid #3A3A30;color:#FAFAF0;padding:9px 16px;border-radius:999px;font-weight:800;font-size:12px;text-transform:uppercase;text-decoration:none">Email</a>
+              </sc-if>
+            </div>
+          </div>
+          <div style="background:#131313;border:1px solid #2A2A24;border-radius:12px;padding:16px">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:#8F8F82">Timeline</div>
+            <sc-for list="{{ odTimeline }}" as="t" hint-placeholder-count="3">
+              <div style="display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid #23231F;font-size:14px">
+                <div style="font-weight:700">{{ t.label }}</div>
+                <div style="color:#C9C9BC;text-align:right">{{ t.when }}</div>
+              </div>
+            </sc-for>
+            <sc-if value="{{ odHasPayment }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:#8F8F82;margin-top:14px">Payment</div>
+              <div style="font-size:13px;color:#C9C9BC;margin-top:6px;line-height:1.7;word-break:break-all">Paystack reference: {{ odReference }}<br>Transaction ID: {{ odPaymentId }}<br>Amount paid: {{ odAmountPaid }}</div>
+              <sc-if value="{{ odHasNote }}" hint-placeholder-val="{{ false }}">
+                <div style="font-size:13px;color:#FF6B5E;margin-top:6px;line-height:1.5">{{ odPaymentNote }}</div>
+              </sc-if>
+            </sc-if>
+          </div>
+        </div>
+
+        <div style="background:#131313;border:1px solid #2A2A24;border-radius:12px;padding:16px;margin-top:16px">
+          <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:#8F8F82">Items</div>
+          <sc-for list="{{ odItems }}" as="i" hint-placeholder-count="2">
+            <div style="display:grid;grid-template-columns:1fr auto auto;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid #23231F;font-size:14px">
+              <div style="font-weight:700">{{ i.name }}</div>
+              <div style="color:#C9C9BC;white-space:nowrap">{{ i.qty }} × {{ i.unit }}</div>
+              <div style="font-weight:800;text-align:right;white-space:nowrap">{{ i.line }}</div>
+            </div>
+          </sc-for>
+          <div style="display:flex;justify-content:space-between;padding-top:10px;font-size:14px;color:#C9C9BC"><div>Subtotal</div><div>{{ odSubtotal }}</div></div>
+          <sc-if value="{{ odHasDiscount }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;justify-content:space-between;padding-top:6px;font-size:14px;color:#C9C9BC"><div>Gold Stack discount</div><div>{{ odDiscount }}</div></div>
+          </sc-if>
+          <div style="display:flex;justify-content:space-between;padding-top:10px;margin-top:8px;border-top:1px solid #2A2A24;font-size:17px;font-weight:800"><div>Total</div><div style="color:#F2E635">{{ odTotal }}</div></div>
+        </div>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between;align-items:center;margin-top:18px">
+          <div style="border:1px solid #3A3A30;color:#FF6B5E;padding:12px 18px;border-radius:999px;font-weight:800;font-size:12px;text-transform:uppercase;cursor:pointer" style-hover="border-color:#FF6B5E" onClick="{{ odDelete }}">Delete order</div>
+          <sc-if value="{{ odCanShip }}" hint-placeholder-val="{{ false }}">
+            <div style="background:#F2E635;color:#131313;padding:12px 22px;border-radius:999px;font-weight:800;font-size:13px;text-transform:uppercase;cursor:pointer" style-hover="background:#FFFFFF" onClick="{{ odShip }}">Mark shipped</div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
   <sc-if value="{{ checkoutOpen }}" hint-placeholder-val="{{ false }}">
     <div style="position:fixed;inset:0;z-index:110;display:flex;align-items:center;justify-content:center;padding:20px">
       <div style="position:absolute;inset:0;background:rgba(0,0,0,0.7)" onClick="{{ closeCheckout }}"></div>
@@ -1046,6 +1177,7 @@ class Component extends DCLogic {
       checkoutErrorMsg: 'Please fill in all fields (with a valid email).',
       adminStatus: 'unknown', adminErr: '', adminBusy: false, adminNote: '',
       adminPw1: '', adminPw2: '', adminLoginPw: '', chgCur: '', chgNew: '',
+      ordFilter: 'all', ordRange: 'all', ordFrom: '', ordTo: '', ordOpenId: null,
       specialActive: saved.specialActive !== undefined ? saved.specialActive : true,
       specialText: saved.specialText || "WINTER SALE, Luke's Good Gold now R299 (was R399). Limited stock!",
       specialDraft: saved.specialText || "WINTER SALE, Luke's Good Gold now R299 (was R399). Limited stock!",
@@ -1069,6 +1201,7 @@ class Component extends DCLogic {
   }
 
   componentDidMount() {
+    window.addEventListener('keydown', e => { if (e.key === 'Escape' && this.state.ordOpenId) this.setState({ ordOpenId: null }); });
     window.addEventListener('popstate', () => {
       const page = this.pageFromPath(location.pathname);
       this.setState({ page });
@@ -1364,25 +1497,91 @@ class Component extends DCLogic {
       toggle: () => this.setState({ openFaq: openFaq === i ? -1 : i })
     }));
 
-    const orderRows = s.orders.map(o => {
-      const customerLabel = (o.customer && typeof o.customer === 'object') ? (o.customer.name || '-') : o.customer;
-      const itemsLabel = Array.isArray(o.items) ? o.items.map(i => i.name + ' ×' + i.qty).join(', ') : o.items;
+    // ---- Admin orders: filters, list rows and the detail view ----
+    const TZ = 'Africa/Johannesburg';
+    const dayKey = d => new Date(d).toLocaleDateString('en-CA', { timeZone: TZ });
+    const fmtDate = d => d ? new Date(d).toLocaleDateString('en-ZA', { timeZone: TZ, day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+    const fmtDateTime = d => d ? new Date(d).toLocaleString('en-ZA', { timeZone: TZ, day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
+    // 'Pending' is stored for paid orders awaiting shipment, and for manual
+    // (pre-Paystack) orders that were never paid online.
+    const statusKey = o => o.status === 'Shipped' ? 'shipped' : o.status === 'Awaiting payment' ? 'awaiting' : (o.paidAt ? 'paid' : 'manual');
+    const STATUS = {
+      awaiting: { label: 'Awaiting payment', bg: '#3A3A30', fg: '#FAFAF0' },
+      paid: { label: 'Paid · to ship', bg: '#F2E635', fg: '#131313' },
+      manual: { label: 'Unpaid · arrange payment', bg: '#FF6B5E', fg: '#131313' },
+      shipped: { label: 'Shipped', bg: '#2A2A24', fg: '#C9C9BC' }
+    };
+    const todayKey = dayKey(Date.now());
+    const daysAgoKey = n => dayKey(Date.now() - n * 86400000);
+    let fromKey = '', toKey = '';
+    if (s.ordRange === 'today') fromKey = todayKey;
+    else if (s.ordRange === '7d') fromKey = daysAgoKey(6);
+    else if (s.ordRange === '30d') fromKey = daysAgoKey(29);
+    else if (s.ordRange === 'month') fromKey = todayKey.slice(0, 8) + '01';
+    else if (s.ordRange === 'custom') { fromKey = s.ordFrom; toKey = s.ordTo; }
+    const inRange = o => { const k = dayKey(o.createdAt || 0); return (!fromKey || k >= fromKey) && (!toKey || k <= toKey); };
+    const dated = s.orders.filter(inRange);
+    const shown = (s.ordFilter === 'all' ? dated : dated.filter(o => statusKey(o) === s.ordFilter))
+      .slice().sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    const shownPaid = shown.filter(o => o.paidAt || o.status === 'Shipped').reduce((t, o) => t + (o.total || 0), 0);
+    const chip = (active, label, pick) => ({ label, pick, bg: active ? '#F2E635' : 'transparent', fg: active ? '#131313' : '#C9C9BC', border: active ? '#F2E635' : '#3A3A30' });
+    const statusOptions = [['all', 'All'], ['awaiting', 'Awaiting payment'], ['paid', 'Paid · to ship'], ['shipped', 'Shipped']];
+    if (s.orders.some(o => statusKey(o) === 'manual')) statusOptions.push(['manual', 'Unpaid']);
+    const ordStatusFilters = statusOptions.map(([k, label]) => chip(s.ordFilter === k,
+      label + ' (' + (k === 'all' ? dated.length : dated.filter(o => statusKey(o) === k).length) + ')',
+      () => this.setState({ ordFilter: k })));
+    const ordRangeFilters = [['all', 'All time'], ['today', 'Today'], ['7d', 'Last 7 days'], ['30d', 'Last 30 days'], ['month', 'This month'], ['custom', 'Custom dates']]
+      .map(([k, label]) => chip(s.ordRange === k, label, () => this.setState({ ordRange: k })));
+    const customerOf = o => (o.customer && typeof o.customer === 'object') ? o.customer : { name: o.customer || '' };
+    const itemsText = o => Array.isArray(o.items) ? o.items.map(i => i.name + ' ×' + i.qty).join(', ') : (o.items || '');
+    const canShip = o => statusKey(o) === 'paid' || statusKey(o) === 'manual';
+    const shipOrder = id => {
+      this.setState({ orders: this.state.orders.map(x => x.id === id ? { ...x, status: 'Shipped', shippedAt: x.shippedAt || new Date().toISOString() } : x) });
+      this.api('/api/orders', { action: 'ship', id }).then(() => this.loadAdminOrders()).catch(() => {});
+    };
+    const orderRows = shown.map(o => {
+      const st = STATUS[statusKey(o)];
       return {
-        ...o,
-        customer: customerLabel,
-        items: itemsLabel,
-        total: R(o.total),
-        statusBg: o.status === 'Shipped' ? '#2A2A24' : '#F2E635',
-        statusFg: o.status === 'Shipped' ? '#C9C9BC' : '#131313',
-        canShip: o.status === 'Pending',
-        ship: () => {
-          if (this._serverMode && this.state.adminStatus === 'ready') {
-            this.api('/api/orders', { action: 'ship', id: o.id }).then(() => this.loadAdminOrders()).catch(() => {});
-          }
-          this.set({ orders: s.orders.map(x => x.id === o.id ? { ...x, status: 'Shipped' } : x) });
-        }
+        id: o.id, date: fmtDate(o.createdAt), customer: customerOf(o).name || '—', items: itemsText(o), total: R(o.total),
+        status: st.label, statusBg: st.bg, statusFg: st.fg, canShip: canShip(o),
+        open: () => this.setState({ ordOpenId: o.id }),
+        ship: e => { if (e && e.stopPropagation) e.stopPropagation(); shipOrder(o.id); }
       };
     });
+
+    const od = s.ordOpenId ? s.orders.find(o => o.id === s.ordOpenId) : null;
+    const odc = od ? customerOf(od) : {};
+    const odSt = od ? STATUS[statusKey(od)] : STATUS.awaiting;
+    const waDigits = p => { const d = String(p || '').replace(/\D/g, ''); return d.startsWith('0') ? '27' + d.slice(1) : d; };
+    const orderDetail = {
+      ordOpen: !!od && s.page === 'admin' && s.adminStatus === 'ready',
+      odId: od ? od.id : '', odStatus: odSt.label, odStatusBg: odSt.bg, odStatusFg: odSt.fg,
+      odName: odc.name || '—', odPhone: odc.phone || '—', odEmail: odc.email || '—', odAddress: odc.address || '—',
+      odHasPhone: !!odc.phone, odHasEmail: !!odc.email,
+      odWhatsApp: odc.phone ? 'https://wa.me/' + waDigits(odc.phone) + '?text=' + encodeURIComponent('Hi ' + String(odc.name || '').split(' ')[0] + ', it\u2019s Luke from Luke\u2019s Good Lifestyle about your order ' + (od ? od.id : '') + '.') : '',
+      odMailto: odc.email ? 'mailto:' + odc.email + '?subject=' + encodeURIComponent('Your order ' + (od ? od.id : '') + ' from Luke\u2019s Good Lifestyle') : '',
+      odTimeline: od ? [{ label: 'Order placed', when: fmtDateTime(od.createdAt) }]
+        .concat(od.paidAt ? [{ label: od.paidVia === 'paystack' ? 'Paid via Paystack' : 'Paid', when: fmtDateTime(od.paidAt) }] : [])
+        .concat(od.status === 'Shipped' ? [{ label: 'Shipped', when: fmtDateTime(od.shippedAt) }] : []) : [],
+      odItems: od && Array.isArray(od.items) ? od.items.map(i => ({ name: i.name, qty: i.qty, unit: R(i.unit), line: R(i.unit * i.qty) })) : [],
+      odSubtotal: od ? R(od.subtotal != null ? od.subtotal : od.total) : '',
+      odHasDiscount: !!(od && od.discount), odDiscount: od && od.discount ? '\u2212' + R(od.discount) : '',
+      odTotal: od ? R(od.total) : '',
+      odHasPayment: !!(od && (od.reference || od.paymentId || od.paymentNote)),
+      odReference: od && od.reference ? od.reference : '—',
+      odPaymentId: od && od.paymentId ? od.paymentId : '—',
+      odAmountPaid: od && od.amountPaid != null ? R(od.amountPaid) : '—',
+      odHasNote: !!(od && od.paymentNote), odPaymentNote: od && od.paymentNote ? od.paymentNote : '',
+      odCanShip: od ? canShip(od) : false,
+      odShip: () => { if (od) shipOrder(od.id); },
+      odDelete: () => {
+        if (!od || !window.confirm('Delete order ' + od.id + '? This cannot be undone.')) return;
+        const id = od.id;
+        this.setState({ ordOpenId: null, orders: this.state.orders.filter(x => x.id !== id) });
+        this.api('/api/orders', { action: 'delete', id }).then(() => this.loadAdminOrders()).catch(() => {});
+      },
+      closeOrder: () => this.setState({ ordOpenId: null })
+    };
     const paidOrders = s.orders.filter(o => o.status !== 'Awaiting payment');
     const orderDate = o => new Date(o.paidAt || o.createdAt || 0);
     const now = new Date();
@@ -1598,7 +1797,16 @@ class Component extends DCLogic {
       stockBreakdown: s.products.map(p => (p.name.split(' ').slice(-1)[0]) + ' ' + (p.stock || 0)).join(' · '),
       pendingCount: s.orders.filter(o => o.status === 'Pending').length,
       chartBars,
-      orderRows
+      orderRows,
+      ordStatusFilters, ordRangeFilters,
+      ordCustom: s.ordRange === 'custom', ordFrom: s.ordFrom, ordTo: s.ordTo,
+      setOrdFrom: e => this.setState({ ordFrom: e.target.value }),
+      setOrdTo: e => this.setState({ ordTo: e.target.value }),
+      ordSummary: shown.length + (shown.length === 1 ? ' order' : ' orders') + ' · ' + R(shownPaid) + ' paid',
+      ordEmpty: shown.length === 0,
+      refreshOrders: () => this.loadAdminOrders(),
+      clearOrdFilters: () => this.setState({ ordFilter: 'all', ordRange: 'all', ordFrom: '', ordTo: '' }),
+      ...orderDetail
     };
   }
 }
