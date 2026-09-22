@@ -35,6 +35,15 @@ export const DEFAULT_STATE = {
     { id: 'gg', name: 'Eterna™ GG', tag: 'Geranylgeraniol 150mg · 30 soft gels', price: 450, sale: null, saleOn: false, stock: 18 },
   ],
   special: { active: true, text: "WINTER SALE, Luke's Good Gold now R299 (was R399). Limited stock!" },
+  // Flat courier fee, waived once an order reaches freeOver (in Rand).
+  shipping: { fee: 99, freeOver: 600 },
+  // Quantity deals on one product. tiers are total prices for that many units.
+  bundle: {
+    active: true,
+    productId: 'gold',
+    freeShippingFromQty: 2,
+    tiers: [{ qty: 2, price: 549 }, { qty: 3, price: 749 }, { qty: 4, price: 999 }],
+  },
 };
 
 /* Repairs product text that lost characters (shows as U+FFFD) before this
@@ -61,6 +70,9 @@ export async function readState() {
   if (repairProductText(s)) {
     try { await store().setJSON('state', s); } catch (e) { console.error('repair write failed', e.message); }
   }
+  // State written before shipping/bundles existed still needs both.
+  if (!s.shipping) s.shipping = structuredClone(DEFAULT_STATE.shipping);
+  if (!s.bundle) s.bundle = structuredClone(DEFAULT_STATE.bundle);
   return s;
 }
 export async function writeState(state) { await store().setJSON('state', state); }
@@ -72,8 +84,18 @@ export async function writeOrders(orders) { await store().setJSON('orders', orde
 
 export const effectivePrice = (p) => (p.saleOn && p.sale ? p.sale : p.price);
 
-/* Server-side cart pricing (never trust client totals). */
-export function priceCart(cart, products) {
+/* Server-side cart pricing (never trust client totals).
+
+   Bundle tiers give a total price for a quantity of one product (2 bags for
+   R549, and so on). For any quantity we charge the cheapest combination of
+   tiers and singles, so a customer can never pay less by splitting the order.
+   A cart gets either the bundle saving or the Gold Stack discount, whichever
+   is larger, never both. Shipping is a flat fee, waived when the bundle
+   qualifies or the order reaches the free-shipping threshold. */
+export function priceCart(cart, products, state = {}) {
+  const shipCfg = state.shipping || DEFAULT_STATE.shipping;
+  const bundleCfg = state.bundle || DEFAULT_STATE.bundle;
+
   const rows = [];
   for (const c of cart || []) {
     const p = products.find((x) => x.id === c.id);
@@ -82,9 +104,39 @@ export function priceCart(cart, products) {
     rows.push({ id: p.id, name: p.name, qty, unit: effectivePrice(p) });
   }
   const subtotal = rows.reduce((t, r) => t + r.unit * r.qty, 0);
+
+  // Cheapest combination of tiers for the bundle product.
+  const bRow = bundleCfg && bundleCfg.active ? rows.find((r) => r.id === bundleCfg.productId) : null;
+  const tiers = ((bundleCfg && bundleCfg.tiers) || []).filter((t) => t.qty >= 2 && t.price > 0);
+  let bundleSaving = 0;
+  if (bRow && tiers.length) {
+    const best = [0];
+    for (let n = 1; n <= bRow.qty; n++) {
+      let cheapest = best[n - 1] + bRow.unit;
+      for (const t of tiers) {
+        if (t.qty <= n) cheapest = Math.min(cheapest, best[n - t.qty] + t.price);
+      }
+      best[n] = cheapest;
+    }
+    bundleSaving = Math.max(0, bRow.unit * bRow.qty - best[bRow.qty]);
+  }
+
   const hasStack = rows.some((r) => r.id === 'gold') && rows.some((r) => r.id === 'gg');
-  const discount = hasStack ? 100 : 0;
-  return { rows, subtotal, discount, total: Math.max(0, subtotal - discount) };
+  const stackSaving = hasStack ? 100 : 0;
+
+  const useBundle = bundleSaving > 0 && bundleSaving >= stackSaving;
+  const discount = useBundle ? bundleSaving : stackSaving;
+  const discountLabel = useBundle ? 'Bundle deal' : (stackSaving ? 'Gold Stack discount' : '');
+  const afterDiscount = Math.max(0, subtotal - discount);
+
+  const qtyForFreeShip = bRow ? bRow.qty : 0;
+  const freeFromQty = Number(bundleCfg && bundleCfg.freeShippingFromQty) || 0;
+  const freeOver = Number(shipCfg && shipCfg.freeOver) || 0;
+  const freeShipping = (freeFromQty > 0 && qtyForFreeShip >= freeFromQty)
+    || (freeOver > 0 && afterDiscount >= freeOver);
+  const shipping = rows.length === 0 || freeShipping ? 0 : Math.max(0, Number(shipCfg && shipCfg.fee) || 0);
+
+  return { rows, subtotal, discount, discountLabel, shipping, freeShipping, total: afterDiscount + shipping };
 }
 
 /* ---------------- Password hashing (scrypt) ---------------- */
@@ -226,7 +278,8 @@ export const esc = (s) => String(s == null ? '' : s)
 export function orderEmailHtml(order, heading, intro) {
   const rows = order.items.map((i) =>
     `<tr><td style="padding:6px 12px 6px 0">${esc(i.name)} × ${i.qty}</td><td align="right" style="padding:6px 0">${R(i.unit * i.qty)}</td></tr>`).join('');
-  const disc = order.discount ? `<tr><td style="padding:6px 12px 6px 0;color:#777">Gold Stack discount</td><td align="right" style="padding:6px 0;color:#777">−${R(order.discount)}</td></tr>` : '';
+  const disc = order.discount ? `<tr><td style="padding:6px 12px 6px 0;color:#777">${esc(order.discountLabel || 'Discount')}</td><td align="right" style="padding:6px 0;color:#777">−${R(order.discount)}</td></tr>` : '';
+  const ship = `<tr><td style="padding:6px 12px 6px 0;color:#777">Delivery</td><td align="right" style="padding:6px 0;color:#777">${order.shipping ? R(order.shipping) : 'FREE'}</td></tr>`;
   return `
   <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;color:#131313">
     <div style="background:#131313;color:#F2E635;padding:18px 24px;border-radius:12px 12px 0 0;font-size:20px;font-weight:800">LUKE'S GOOD LIFESTYLE</div>
@@ -234,7 +287,7 @@ export function orderEmailHtml(order, heading, intro) {
       <h2 style="margin:0 0 8px">${esc(heading)}</h2>
       <p style="margin:0 0 16px;color:#555">${esc(intro)}</p>
       <p style="margin:0 0 4px"><strong>Order ${order.id}</strong></p>
-      <table style="width:100%;border-collapse:collapse;font-size:14px">${rows}${disc}
+      <table style="width:100%;border-collapse:collapse;font-size:14px">${rows}${disc}${ship}
         <tr><td style="padding:10px 12px 0 0;border-top:1px solid #eee"><strong>Total</strong></td><td align="right" style="padding:10px 0 0;border-top:1px solid #eee"><strong>${R(order.total)}</strong></td></tr>
       </table>
       <p style="margin:18px 0 0;font-size:13px;color:#777">Delivery to: ${esc(order.customer.address || '-')}<br>

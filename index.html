@@ -172,6 +172,11 @@
 @media (min-width: 1100px) { .rheroimg { margin-top: -290px !important; } }
 @media (min-width: 1280px) { .rheroimg { margin-top: -340px !important; } }
 .rproddlg input, .rproddlg textarea { font-family: inherit; }
+@media (max-width: 760px) {
+  .rbundlegrid { grid-template-columns: 1fr 1fr !important; }
+  .rtierrow { grid-template-columns: 1fr 1fr !important; }
+  .rtierrow .tier-remove { grid-column: 1 / -1; text-align: center; }
+}
 /* Admin dashboard on phones */
 .radm-field { display: block; }
 .radm-flabel { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
@@ -592,6 +597,17 @@
               <div style="font-family:'Anton',sans-serif;font-size:30px;text-transform:uppercase">{{ p.name }}</div>
               <div style="color:#F2E635;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em">{{ p.tag }}</div>
               <div style="color:#C9C9BC;font-size:15px;line-height:1.6">{{ p.desc }}</div>
+              <sc-if value="{{ p.hasBundle }}" hint-placeholder-val="{{ false }}">
+                <div class="rbundle" style="margin-top:14px;border:1px dashed #3A3A30;border-radius:12px;padding:12px 14px">
+                  <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:#8F8F82">Bulk deal</div>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+                    <sc-for list="{{ p.bundleTiers }}" as="t" hint-placeholder-count="3">
+                      <div style="border:1px solid {{ t.bd }};background:{{ t.bg }};color:{{ t.fg }};padding:8px 13px;border-radius:999px;font-weight:800;font-size:12px;cursor:pointer;white-space:nowrap" style-hover="border-color:#F2E635" onClick="{{ t.add }}">{{ t.label }}</div>
+                    </sc-for>
+                  </div>
+                  <div style="color:#8F8F82;font-size:12px;margin-top:8px">{{ p.bundleNote }}</div>
+                </div>
+              </sc-if>
               <div style="display:flex;align-items:center;gap:12px;margin-top:auto;padding-top:14px">
                 <div style="font-family:'Anton',sans-serif;font-size:32px;color:#F2E635">{{ p.priceLabel }}</div>
                 <sc-if value="{{ p.hasSale }}" hint-placeholder-val="{{ false }}"><div style="color:#8F8F82;text-decoration:line-through;font-size:17px">{{ p.wasLabel }}</div></sc-if>
@@ -895,6 +911,52 @@
         <div style="font-size:12px;color:#8F8F82;margin-top:12px">Changes save automatically and update the live shop instantly.</div>
       </div>
 
+      <!-- BULK DEALS & DELIVERY -->
+      <div style="background:#191916;border:1px solid #2A2A24;border-radius:14px;padding:24px;margin-top:20px">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+          <div style="font-weight:800;font-size:14px;text-transform:uppercase;letter-spacing:0.08em">Bulk deals &amp; delivery</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div class="rbundle-toggle" style="width:46px;height:26px;border-radius:999px;background:{{ bundleToggleBg }};position:relative;cursor:pointer;transition:background 0.2s" onClick="{{ toggleBundle }}">
+              <div style="position:absolute;top:3px;left:{{ bundleKnobLeft }};width:20px;height:20px;border-radius:999px;background:#FAFAF0;transition:left 0.2s"></div>
+            </div>
+            <div style="font-size:12px;font-weight:700;color:{{ bundleStateColor }}">{{ bundleStateLabel }}</div>
+          </div>
+        </div>
+        <div style="color:#8F8F82;font-size:13px;margin-top:8px">Set a total price for buying several of one product. Customers always pay the cheapest combination, so a bigger order is never more expensive.</div>
+
+        <div class="rbundlegrid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:16px">
+          <label style="display:block"><span style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:#8F8F82">Deal product</span>
+            <div style="color:#FAFAF0;font-size:15px;font-weight:700;padding:10px 0">{{ bundleProductName }}</div></label>
+          <label style="display:block"><span style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:#8F8F82">Free delivery from (bags)</span>
+            <input id="bundle-freeqty" type="number" inputmode="numeric" value="{{ bundleFreeQty }}" onChange="{{ setBundleFreeQty }}" style="width:100%;box-sizing:border-box;background:#131313;border:1px solid #3A3A30;border-radius:8px;color:#FAFAF0;padding:10px;font-size:16px"></label>
+          <div></div>
+        </div>
+
+        <div style="margin-top:14px">
+          <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:#8F8F82">Price tiers</div>
+          <sc-for list="{{ bundleTierRows }}" as="t" hint-placeholder-count="3">
+            <div class="rtierrow" style="display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:end;margin-top:10px">
+              <label style="display:block"><span style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:#8F8F82">Quantity</span>
+                <input class="tier-qty" type="number" inputmode="numeric" value="{{ t.qty }}" onChange="{{ t.setQty }}" style="width:100%;box-sizing:border-box;background:#131313;border:1px solid #3A3A30;border-radius:8px;color:#FAFAF0;padding:10px;font-size:16px"></label>
+              <label style="display:block"><span style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:#8F8F82">Total price (R)</span>
+                <input class="tier-price" type="number" inputmode="decimal" value="{{ t.price }}" onChange="{{ t.setPrice }}" style="width:100%;box-sizing:border-box;background:#131313;border:1px solid #3A3A30;border-radius:8px;color:#FAFAF0;padding:10px;font-size:16px"></label>
+              <div class="tier-remove" style="border:1px solid #3A3A30;color:#FF6B5E;padding:11px 16px;border-radius:999px;font-weight:800;font-size:11px;text-transform:uppercase;cursor:pointer;white-space:nowrap" style-hover="border-color:#FF6B5E" onClick="{{ t.remove }}">Remove</div>
+            </div>
+          </sc-for>
+          <div class="rtier-add" style="display:inline-block;margin-top:12px;border:1px solid #3A3A30;color:#C9C9BC;padding:9px 16px;border-radius:999px;font-weight:800;font-size:11px;text-transform:uppercase;cursor:pointer" style-hover="border-color:#F2E635;color:#F2E635" onClick="{{ addTier }}">+ Add tier</div>
+          <div style="color:#8F8F82;font-size:12px;margin-top:10px">{{ bundlePreview }}</div>
+        </div>
+
+        <div class="rbundlegrid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:18px;border-top:1px solid #23231F;padding-top:16px">
+          <label style="display:block"><span style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:#8F8F82">Delivery fee (R)</span>
+            <input id="ship-fee" type="number" inputmode="decimal" value="{{ shipFee }}" onChange="{{ setShipFee }}" style="width:100%;box-sizing:border-box;background:#131313;border:1px solid #3A3A30;border-radius:8px;color:#FAFAF0;padding:10px;font-size:16px"></label>
+          <label style="display:block"><span style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:#8F8F82">Free delivery over (R)</span>
+            <input id="ship-freeover" type="number" inputmode="decimal" value="{{ shipFreeOver }}" onChange="{{ setShipFreeOver }}" style="width:100%;box-sizing:border-box;background:#131313;border:1px solid #3A3A30;border-radius:8px;color:#FAFAF0;padding:10px;font-size:16px"></label>
+          <div></div>
+        </div>
+        <div style="color:#8F8F82;font-size:12px;margin-top:10px">Changes save automatically. The shop, the cart and the Shipping Policy page all follow these numbers.</div>
+      </div>
+
       <!-- ORDERS -->
       <div style="background:#191916;border:1px solid #2A2A24;border-radius:14px;padding:24px;margin-top:20px">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px">
@@ -1051,11 +1113,15 @@
           </sc-for>
         </div>
         <div style="padding:20px 24px;border-top:1px solid #2A2A24">
-          <sc-if value="{{ hasStackDiscount }}" hint-placeholder-val="{{ false }}">
-            <div style="display:flex;justify-content:space-between;font-size:13px;color:#8F8F82;font-weight:600;margin-bottom:6px"><span>Subtotal</span><span>{{ cartSubtotalLabel }}</span></div>
-            <div style="display:flex;justify-content:space-between;font-size:13px;color:#F2E635;font-weight:700;margin-bottom:10px"><span>Gold Stack discount</span><span>{{ stackDiscountLabel }}</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;color:#8F8F82;font-weight:600;margin-bottom:6px"><span>Subtotal</span><span>{{ cartSubtotalLabel }}</span></div>
+          <sc-if value="{{ hasCartDiscount }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;justify-content:space-between;font-size:13px;color:#F2E635;font-weight:700;margin-bottom:6px"><span>{{ cartDiscountName }}</span><span>{{ cartDiscountLabel }}</span></div>
           </sc-if>
+          <div style="display:flex;justify-content:space-between;font-size:13px;color:#8F8F82;font-weight:600;margin-bottom:10px"><span>Delivery</span><span>{{ cartShipLabel }}</span></div>
           <div style="display:flex;justify-content:space-between;font-weight:800;font-size:16px"><span>Total</span><span style="color:#F2E635;font-family:'Anton',sans-serif;font-size:22px">{{ cartTotalLabel }}</span></div>
+          <sc-if value="{{ hasTierHint }}" hint-placeholder-val="{{ false }}">
+            <div class="rcart-hint" style="margin-top:12px;background:#1F1F1A;border:1px dashed #3A3A30;border-radius:10px;padding:10px 12px;color:#F2E635;font-size:12px;font-weight:700;line-height:1.5">{{ cartTierHint }}</div>
+          </sc-if>
           <sc-if value="{{ cartHasItems }}" hint-placeholder-val="{{ false }}">
             <div style="margin-top:16px;background:#F2E635;color:#131313;padding:16px;border-radius:999px;font-weight:800;font-size:15px;text-transform:uppercase;letter-spacing:0.05em;text-align:center;cursor:pointer" style-hover="background:#FFFFFF" onClick="{{ startCheckout }}">Checkout →</div>
           </sc-if>
@@ -1245,6 +1311,9 @@ class Component extends DCLogic {
       adminStatus: 'unknown', adminErr: '', adminBusy: false, adminNote: '',
       adminPw1: '', adminPw2: '', adminLoginPw: '', chgCur: '', chgNew: '',
       ordFilter: 'all', ordRange: 'all', ordFrom: '', ordTo: '', ordOpenId: null,
+      shipCfg: { fee: 99, freeOver: 600 },
+      bundleCfg: { active: true, productId: 'gold', freeShippingFromQty: 2,
+        tiers: [{ qty: 2, price: 549 }, { qty: 3, price: 749 }, { qty: 4, price: 999 }] },
       prodOpenId: null, prodName: '', prodTag: '', prodDesc: '', prodPrice: '', prodSale: '',
       prodStock: '', prodSaleOn: false, prodImg: '', prodBusy: false, prodErr: '',
       specialActive: saved.specialActive !== undefined ? saved.specialActive : true,
@@ -1348,12 +1417,22 @@ class Component extends DCLogic {
           if (!fromServer.desc) delete fromServer.desc;
           return { ...(cur.products.find(x => x.id === sp.id) || {}), ...fromServer };
         });
+        const ship = state.shipping
+          ? { fee: Number(state.shipping.fee) || 0, freeOver: Number(state.shipping.freeOver) || 0 }
+          : cur.shipCfg;
+        const bundle = state.bundle
+          ? { active: !!state.bundle.active, productId: state.bundle.productId || 'gold',
+              freeShippingFromQty: Number(state.bundle.freeShippingFromQty) || 0,
+              tiers: (Array.isArray(state.bundle.tiers) ? state.bundle.tiers : []).map(t => ({ qty: Number(t.qty) || 0, price: Number(t.price) || 0 })) }
+          : cur.bundleCfg;
         const sActive = !!(state.special && state.special.active);
         const sText = (state.special && state.special.text) || '';
         const changed = JSON.stringify(merged) !== JSON.stringify(cur.products)
-          || sActive !== cur.specialActive || sText !== cur.specialText;
+          || sActive !== cur.specialActive || sText !== cur.specialText
+          || JSON.stringify(ship) !== JSON.stringify(cur.shipCfg)
+          || JSON.stringify(bundle) !== JSON.stringify(cur.bundleCfg);
         if (changed) {
-          this.set({ products: merged, specialActive: sActive, specialText: sText, specialDraft: sText });
+          this.set({ products: merged, specialActive: sActive, specialText: sText, specialDraft: sText, shipCfg: ship, bundleCfg: bundle });
         }
       }
     }).catch(() => {});
@@ -1483,7 +1562,9 @@ class Component extends DCLogic {
       const s = this.state;
       this.api('/api/store', {
         products: s.products.map(p => ({ id: p.id, name: p.name, tag: p.tag, desc: p.desc, img: p.img, price: p.price, sale: p.sale, saleOn: p.saleOn, stock: p.stock })),
-        special: { active: s.specialActive, text: s.specialText }
+        special: { active: s.specialActive, text: s.specialText },
+        shipping: s.shipCfg,
+        bundle: s.bundleCfg
       }, 'PUT').catch(() => {});
     }, 500);
   }
@@ -1563,6 +1644,75 @@ class Component extends DCLogic {
     this.pushStore();
   }
 
+  /* Mirrors priceCart() in netlify/functions/lib/util.mjs so the cart shows
+     what the server will actually charge. The server stays the source of
+     truth: checkout re-prices everything before taking payment. */
+  quote(cart) {
+    const s = this.state;
+    const ship = s.shipCfg || {}, bundle = s.bundleCfg || {};
+    const rows = (cart || []).map(c => {
+      const p = s.products.find(x => x.id === c.id);
+      return p ? { id: p.id, name: p.name, qty: c.qty, unit: this.effectivePrice(p) } : null;
+    }).filter(Boolean);
+    const subtotal = rows.reduce((t, r) => t + r.unit * r.qty, 0);
+
+    const bRow = bundle.active ? rows.find(r => r.id === bundle.productId) : null;
+    const tiers = (bundle.tiers || []).filter(t => t.qty >= 2 && t.price > 0);
+    let bundleSaving = 0;
+    if (bRow && tiers.length) {
+      const best = [0];
+      for (let n = 1; n <= bRow.qty; n++) {
+        let cheapest = best[n - 1] + bRow.unit;
+        for (const t of tiers) if (t.qty <= n) cheapest = Math.min(cheapest, best[n - t.qty] + t.price);
+        best[n] = cheapest;
+      }
+      bundleSaving = Math.max(0, bRow.unit * bRow.qty - best[bRow.qty]);
+    }
+    const hasStack = rows.some(r => r.id === 'gold') && rows.some(r => r.id === 'gg');
+    const stackSaving = hasStack ? 100 : 0;
+    const useBundle = bundleSaving > 0 && bundleSaving >= stackSaving;
+    const discount = useBundle ? bundleSaving : stackSaving;
+    const discountLabel = useBundle ? 'Bundle deal' : (stackSaving ? 'Gold Stack discount' : '');
+    const afterDiscount = Math.max(0, subtotal - discount);
+
+    const freeFromQty = Number(bundle.freeShippingFromQty) || 0;
+    const freeOver = Number(ship.freeOver) || 0;
+    const freeShipping = (freeFromQty > 0 && (bRow ? bRow.qty : 0) >= freeFromQty)
+      || (freeOver > 0 && afterDiscount >= freeOver);
+    const shipping = rows.length === 0 || freeShipping ? 0 : Math.max(0, Number(ship.fee) || 0);
+    return { rows, subtotal, discount, discountLabel, shipping, freeShipping,
+      total: afterDiscount + shipping, bundleQty: bRow ? bRow.qty : 0, unit: bRow ? bRow.unit : 0 };
+  }
+
+  /* "Add one more bag for R250 instead of R299, and delivery becomes free." */
+  tierHint(quote) {
+    const s = this.state, bundle = s.bundleCfg || {};
+    if (!bundle.active || !quote.rows.length) return '';
+    const next = (bundle.tiers || []).filter(t => t.qty > quote.bundleQty).sort((a, b) => a.qty - b.qty)[0];
+    if (!next) return '';
+    const has = s.cart.some(c => c.id === bundle.productId);
+    const nextCart = has
+      ? s.cart.map(c => c.id === bundle.productId ? { ...c, qty: next.qty } : c)
+      : s.cart.concat([{ id: bundle.productId, qty: next.qty }]);
+    const q2 = this.quote(nextCart);
+    const add = next.qty - quote.bundleQty;
+    const extra = Math.max(0, q2.total - quote.total);
+    const normal = add * (quote.unit || q2.unit);
+    const bag = add === 1 ? 'bag' : 'bags';
+    const free = !quote.freeShipping && q2.freeShipping;
+    if (normal > extra) return 'Add ' + add + ' more ' + bag + ' for ' + this.rand(extra) + ' instead of ' + this.rand(normal) + (free ? ', delivery included' : '') + '.';
+    return 'Add ' + add + ' more ' + bag + (free ? ' and delivery becomes free' : '') + '.';
+  }
+
+  rand(n) { return 'R' + Number(n || 0).toLocaleString('en-ZA'); }
+
+  setCartQty(id, qty) {
+    const cart = this.state.cart.some(c => c.id === id)
+      ? this.state.cart.map(c => c.id === id ? { ...c, qty } : c)
+      : this.state.cart.concat([{ id, qty }]);
+    this.set({ cart, cartOpen: true });
+  }
+
   effectivePrice(p) { return (p.saleOn && p.sale) ? p.sale : p.price; }
 
   addToCart(id) {
@@ -1587,6 +1737,16 @@ class Component extends DCLogic {
     const R = n => 'R' + Number(n).toLocaleString('en-ZA');
     const wa = "https://wa.me/27730283066?text=";
 
+    const bundleOn = !!(s.bundleCfg && s.bundleCfg.active);
+    const bundleTiers = bundleOn ? (s.bundleCfg.tiers || []).filter(t => t.qty >= 2 && t.price > 0).sort((a, b) => a.qty - b.qty) : [];
+    const freeFrom = bundleOn ? Number(s.bundleCfg.freeShippingFromQty) || 0 : 0;
+    // the tier with the lowest price per bag is what we badge as best value
+    const perBag = t => t.price / t.qty;
+    const bestTier = bundleTiers.length ? bundleTiers.reduce((a, b) => (perBag(b) < perBag(a) - 0.001 ? b : a)) : null;
+    const deliveryNote = freeFrom > 0
+      ? 'Free delivery from ' + freeFrom + ' bags. Otherwise ' + R(s.shipCfg.fee) + ' delivery, free over ' + R(s.shipCfg.freeOver) + '.'
+      : 'Delivery ' + R(s.shipCfg.fee) + ', free over ' + R(s.shipCfg.freeOver) + '.';
+    const bundleNote = (bestTier ? 'Best value: ' + bestTier.qty + ' bags at ' + R(Math.round(perBag(bestTier))) + ' a bag. ' : '') + deliveryNote;
     const shopProducts = s.products.map(p => {
       const hasSale = !!(p.saleOn && p.sale);
       return {
@@ -1596,7 +1756,17 @@ class Component extends DCLogic {
         wasLabel: R(p.price),
         offLabel: hasSale ? ('SAVE ' + R(p.price - p.sale)) : '',
         lowStock: p.stock > 0 && p.stock < 25,
-        add: () => this.addToCart(p.id)
+        add: () => this.addToCart(p.id),
+        hasBundle: bundleOn && p.id === s.bundleCfg.productId && bundleTiers.length > 0,
+        bundleTiers: bundleTiers.map(t => ({
+          label: t.qty + ' for ' + R(t.price),
+          bg: bestTier && t.qty === bestTier.qty ? '#F2E635' : 'transparent',
+          fg: bestTier && t.qty === bestTier.qty ? '#0B0B0A' : '#FAFAF0',
+          bd: bestTier && t.qty === bestTier.qty ? '#F2E635' : '#3A3A30',
+          add: () => this.setCartQty(p.id, t.qty)
+        })),
+        bundleNote: bundleNote,
+        bundleShort: bundleTiers.length ? bundleTiers.map(t => t.qty + ' for ' + R(t.price)).join(' · ') : ''
       };
     });
 
@@ -1630,7 +1800,9 @@ class Component extends DCLogic {
     const cartCount = s.cart.reduce((t, c) => t + c.qty, 0);
     const hasStack = s.cart.some(c => c.id === 'gold') && s.cart.some(c => c.id === 'gg');
     const stackDiscount = hasStack ? 100 : 0;
-    const cartTotalFinal = Math.max(0, cartTotal - stackDiscount);
+    const quote = this.quote(s.cart);
+    const cartTotalFinal = quote.total;
+    const tierHint = this.tierHint(quote);
     const gold = s.products.find(p => p.id === 'gold');
     const gg = s.products.find(p => p.id === 'gg');
     const stackWas = (gold ? this.effectivePrice(gold) : 0) + (gg ? this.effectivePrice(gg) : 0);
@@ -1808,7 +1980,8 @@ class Component extends DCLogic {
       shipping: { title: 'Shipping Policy', sections: [
         { heading: '1. Where we ship', body: 'We ship Luke\u2019s Gold products anywhere in South Africa via courier. Collection in person can also be arranged at Planet Fitness Lynnwood Bridge, Pretoria, just mention it on WhatsApp after ordering.' },
         { heading: '2. Delivery times', body: 'Orders are packed within 1\u20132 business days. Delivery takes 2\u20133 business days in Gauteng and 3\u20135 business days for the rest of South Africa. You\u2019ll receive a tracking number via WhatsApp as soon as your order ships.' },
-        { heading: '3. Shipping costs', body: 'A flat courier fee of R99 applies to all orders. Orders over R600 ship free.' },
+        { heading: '3. Shipping costs', body: 'A flat courier fee of ' + R(s.shipCfg.fee) + ' applies to all orders. Orders of ' + R(s.shipCfg.freeOver) + ' or more ship free'
+          + (s.bundleCfg.active && s.bundleCfg.freeShippingFromQty > 0 ? ', and any bulk deal of ' + s.bundleCfg.freeShippingFromQty + ' bags or more includes free delivery' : '') + '.' },
         { heading: '4. Missing or damaged orders', body: 'If your order arrives damaged or goes missing in transit, send us a photo and your order number on WhatsApp within 7 days of delivery and we\u2019ll replace it at no cost.' }
       ]}
     };
@@ -1863,6 +2036,41 @@ class Component extends DCLogic {
       deleteProduct: () => this.deleteProduct(),
       closeProduct: () => this.setState({ prodOpenId: null }),
 
+      bundleToggleBg: s.bundleCfg.active ? '#F2E635' : '#3A3A30',
+      bundleKnobLeft: s.bundleCfg.active ? '23px' : '3px',
+      bundleStateLabel: s.bundleCfg.active ? 'Live' : 'Off',
+      bundleStateColor: s.bundleCfg.active ? '#F2E635' : '#8F8F82',
+      bundleProductName: (s.products.find(p => p.id === s.bundleCfg.productId) || {}).name || s.bundleCfg.productId,
+      bundleFreeQty: s.bundleCfg.freeShippingFromQty,
+      shipFee: s.shipCfg.fee,
+      shipFreeOver: s.shipCfg.freeOver,
+      bundlePreview: bundleTiers.length
+        ? 'Customers see: ' + bundleTiers.map(t => t.qty + ' for ' + R(t.price) + ' (' + R(Math.round(t.price / t.qty)) + ' each)').join('  ')
+        : 'No tiers yet: add one to start the deal.',
+      toggleBundle: () => { this.set({ bundleCfg: { ...s.bundleCfg, active: !s.bundleCfg.active } }); this.pushStore(); },
+      setBundleFreeQty: e => { this.set({ bundleCfg: { ...s.bundleCfg, freeShippingFromQty: Math.max(0, parseInt(e.target.value, 10) || 0) } }); this.pushStore(); },
+      setShipFee: e => { this.set({ shipCfg: { ...s.shipCfg, fee: Math.max(0, Number(e.target.value) || 0) } }); this.pushStore(); },
+      setShipFreeOver: e => { this.set({ shipCfg: { ...s.shipCfg, freeOver: Math.max(0, Number(e.target.value) || 0) } }); this.pushStore(); },
+      addTier: () => {
+        const tiers = (s.bundleCfg.tiers || []).concat([{ qty: 0, price: 0 }]);
+        this.set({ bundleCfg: { ...s.bundleCfg, tiers } });
+      },
+      bundleTierRows: (s.bundleCfg.tiers || []).map((t, i) => ({
+        qty: t.qty, price: t.price,
+        setQty: e => {
+          const tiers = s.bundleCfg.tiers.map((x, j) => j === i ? { ...x, qty: Math.max(0, parseInt(e.target.value, 10) || 0) } : x);
+          this.set({ bundleCfg: { ...s.bundleCfg, tiers } }); this.pushStore();
+        },
+        setPrice: e => {
+          const tiers = s.bundleCfg.tiers.map((x, j) => j === i ? { ...x, price: Math.max(0, Number(e.target.value) || 0) } : x);
+          this.set({ bundleCfg: { ...s.bundleCfg, tiers } }); this.pushStore();
+        },
+        remove: () => {
+          this.set({ bundleCfg: { ...s.bundleCfg, tiers: s.bundleCfg.tiers.filter((x, j) => j !== i) } });
+          this.pushStore();
+        }
+      })),
+
       shopProducts, adminProducts,
       homeResults: allResults.slice(0, 3), allResults, plans,
 
@@ -1870,6 +2078,12 @@ class Component extends DCLogic {
       closeCart: () => this.setState({ cartOpen: false }),
       cartRows, cartCount, cartHasItems: cartCount > 0, cartEmpty: cartCount === 0,
       cartTotalLabel: R(cartTotalFinal),
+      hasCartDiscount: quote.discount > 0,
+      cartDiscountName: quote.discountLabel,
+      cartDiscountLabel: String.fromCharCode(8722) + R(quote.discount),
+      cartShipLabel: quote.shipping ? R(quote.shipping) : 'FREE',
+      cartTierHint: tierHint,
+      hasTierHint: !!tierHint,
       hasStackDiscount: hasStack,
       stackDiscountLabel: '\u2212' + R(stackDiscount),
       cartSubtotalLabel: R(cartTotal),

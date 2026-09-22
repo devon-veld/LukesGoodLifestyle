@@ -39,7 +39,7 @@ export default async (req) => {
   }
 
   const state = await readState();
-  const priced = priceCart(body.cart, state.products);
+  const priced = priceCart(body.cart, state.products, state);
   if (!priced.rows.length) return json({ error: 'Your cart is empty.' }, 400);
 
   // stock guard: never sell more than we have
@@ -57,6 +57,8 @@ export default async (req) => {
     items: priced.rows,
     subtotal: priced.subtotal,
     discount: priced.discount,
+    discountLabel: priced.discountLabel,
+    shipping: priced.shipping,
     total: priced.total,
   };
 

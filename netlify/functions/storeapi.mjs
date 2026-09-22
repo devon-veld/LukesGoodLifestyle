@@ -45,6 +45,27 @@ export default async (req) => {
       if (!products.length) return json({ error: 'The shop needs at least one product.' }, 400);
       state.products = products;
     }
+    if (body.shipping && typeof body.shipping === 'object') {
+      state.shipping = {
+        fee: Math.min(2000, Math.max(0, Number(body.shipping.fee) || 0)),
+        freeOver: Math.min(100000, Math.max(0, Number(body.shipping.freeOver) || 0)),
+      };
+    }
+    if (body.bundle && typeof body.bundle === 'object') {
+      const seenQty = new Set();
+      const tiers = (Array.isArray(body.bundle.tiers) ? body.bundle.tiers : [])
+        .map((t) => ({ qty: parseInt(t.qty, 10) || 0, price: Math.min(999999, Math.max(0, Number(t.price) || 0)) }))
+        .filter((t) => t.qty >= 2 && t.qty <= 24 && t.price > 0 && !seenQty.has(t.qty) && seenQty.add(t.qty))
+        .sort((a, b) => a.qty - b.qty)
+        .slice(0, 8);
+      const productId = String(body.bundle.productId || '').toLowerCase().replace(/[^a-z0-9-]+/g, '-');
+      state.bundle = {
+        active: !!body.bundle.active,
+        productId: state.products.some((p) => p.id === productId) ? productId : state.products[0].id,
+        freeShippingFromQty: Math.min(24, Math.max(0, parseInt(body.bundle.freeShippingFromQty, 10) || 0)),
+        tiers,
+      };
+    }
     if (body.special && typeof body.special === 'object') {
       state.special = { active: !!body.special.active, text: String(body.special.text || '').slice(0, 300) };
     }
