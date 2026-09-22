@@ -31,8 +31,8 @@ export const SITE_URL = (process.env.URL || 'https://lukesgoodlifestyle.com').re
 /* ---------------- Default catalog (seed) ---------------- */
 export const DEFAULT_STATE = {
   products: [
-    { id: 'gold', name: "Luke's Good Gold", tag: 'Golden paste capsules · 30 servings', price: 399, sale: 299, saleOn: true, stock: 42 },
-    { id: 'gg', name: 'Eterna™ GG', tag: 'Geranylgeraniol 150mg · 30 soft gels', price: 450, sale: null, saleOn: false, stock: 18 },
+    { id: 'gold', name: "Luke's Good Gold", tag: 'Daily spice blend · 30 servings', desc: 'Luke’s signature blend of 10 carefully selected spices, created to complement your weight-loss routine. Designed to support healthy digestion, appetite management, everyday energy and overall wellness — all in convenient daily capsules.', price: 399, sale: 299, saleOn: true, stock: 42 },
+    { id: 'gg', name: 'Eterna™ GG', tag: 'Geranylgeraniol 150mg · 30 soft gels', desc: 'Cellular energy, stronger every day. Supports mitochondrial function, muscle recovery, healthy aging and heart health. Part of Luke’s Gold Line.', price: 450, sale: null, saleOn: false, stock: 18 },
   ],
   special: { active: true, text: "WINTER SALE, Luke's Good Gold now R299 (was R399). Limited stock!" },
   // Flat courier fee, waived once an order reaches freeOver (in Rand).
@@ -49,13 +49,25 @@ export const DEFAULT_STATE = {
 /* Repairs product text that lost characters (shows as U+FFFD) before this
    data was written. Only the built-in products can be restored exactly, from
    DEFAULT_STATE; anything else is left for the admin to retype. */
+/* Catalog text we have since rewritten. Stored text that still matches one
+   of these is moved to the current default; anything an admin edited
+   themselves is left exactly as they wrote it. */
+const SUPERSEDED_TEXT = {
+  gold: {
+    tag: ['Golden paste capsules · 30 servings'],
+    desc: ['Luke’s signature turmeric golden-paste blend. Boosts immunity, supports fat loss, improves digestion and keeps energy & focus high all day.'],
+  },
+};
+
 function repairProductText(state) {
   let changed = false;
   for (const p of state.products || []) {
     const base = DEFAULT_STATE.products.find((d) => d.id === p.id);
     if (!base) continue;
-    for (const field of ['name', 'tag']) {
-      if (typeof p[field] === 'string' && p[field].includes('�')) {
+    const old = SUPERSEDED_TEXT[p.id] || {};
+    for (const field of ['name', 'tag', 'desc']) {
+      if (typeof p[field] !== 'string' || !base[field]) continue;
+      if (p[field].includes('�') || (old[field] || []).includes(p[field].trim())) {
         p[field] = base[field];
         changed = true;
       }
