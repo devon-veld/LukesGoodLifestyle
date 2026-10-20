@@ -136,7 +136,7 @@
       "name": "Eterna GG",
       "sku": "LGL-GG",
       "description": "Geranylgeraniol 150mg soft gels — cellular energy, muscle recovery, healthy aging. 30 soft gels.",
-      "image": "https://lukesgoodlifestyle.com/assets/product-eterna-gg.webp",
+      "image": "https://lukesgoodlifestyle.com/assets/product-eterna-gg-20261015.webp",
       "brand": { "@type": "Brand", "name": "Luke's Good Lifestyle" },
       "offers": { "@type": "Offer", "priceCurrency": "ZAR", "price": "450", "availability": "https://schema.org/InStock", "itemCondition": "https://schema.org/NewCondition", "url": "https://lukesgoodlifestyle.com/" }
     },
@@ -587,7 +587,7 @@
         <div class="rprod" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:32px">
           <sc-for list="{{ shopProducts }}" as="p" hint-placeholder-count="0">
             <div class="rprodcard" data-reveal style="border:1px solid #2A2A24;border-radius:16px;overflow:hidden;display:grid;grid-template-columns:200px 1fr;background:#191916" style-hover="border-color:#F2E635">
-              <div style="background:#FAFAF0;display:flex;align-items:center;justify-content:center;padding:10px"><div role="img" aria-label="{{ p.name }}" style="width:100%;height:220px;border-radius:8px;background-image:url('{{ p.img }}');background-size:cover;background-position:center"></div></div>
+              <div style="background:#FAFAF0;display:flex;align-items:center;justify-content:center;padding:10px"><img src="{{ p.img }}" srcSet="{{ p.imageSrcSet }}" sizes="(max-width:640px) 88px, 178px" alt="{{ p.name }}" loading="lazy" decoding="async" style="display:block;width:100%;min-width:0;height:220px;border-radius:8px;object-fit:cover;object-position:center"></div>
               <div style="padding:22px;display:flex;flex-direction:column;gap:8px">
                 <sc-if value="{{ p.hasSale }}" hint-placeholder-val="{{ false }}"><div style="align-self:flex-start;background:#F2E635;color:#131313;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;padding:4px 10px;border-radius:4px">{{ p.offLabel }}</div></sc-if>
                 <div style="font-family:'Anton',sans-serif;font-size:24px;text-transform:uppercase">{{ p.name }}</div>
@@ -648,7 +648,7 @@
       <div class="rprod" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:40px">
         <sc-for list="{{ shopProducts }}" as="p" hint-placeholder-count="0">
           <div style="border:1px solid #2A2A24;border-radius:18px;overflow:hidden;background:#191916;display:flex;flex-direction:column" style-hover="border-color:#F2E635">
-            <div style="position:relative;background:#FAFAF0"><div role="img" aria-label="{{ p.name }}" style="width:100%;aspect-ratio:4/5;background-image:url('{{ p.img }}');background-size:cover;background-position:center 40%"></div>
+            <div style="position:relative;background:#FAFAF0"><img src="{{ p.img }}" srcSet="{{ p.imageSrcSet }}" sizes="(max-width:900px) calc(100vw - 50px), (max-width:1240px) calc((100vw - 76px) / 2), 582px" alt="{{ p.name }}" loading="lazy" decoding="async" style="display:block;width:100%;aspect-ratio:4/5;object-fit:{{ p.imageFit }};object-position:center 40%">
               <sc-if value="{{ p.hasSale }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:14px;left:14px;background:#F2E635;color:#131313;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;padding:6px 12px;border-radius:6px;transform:rotate(-3deg)">{{ p.offLabel }}</div></sc-if>
               <sc-if value="{{ p.lowStock }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:14px;right:14px;background:#131313;color:#F2E635;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;padding:6px 12px;border-radius:6px">Only {{ p.stock }} left</div></sc-if>
             </div>
@@ -1399,7 +1399,7 @@ class Component extends DCLogic {
       specialDraft: saved.specialText || "WINTER SALE, Luke's Good Gold now R299 (was R399). Limited stock!",
       products: [
         { id: 'gold', name: "Luke's Good Gold", tag: 'Daily spice blend · 30 servings', desc: 'Luke\u2019s signature blend of 10 carefully selected spices, created to complement your weight-loss routine. Designed to support healthy digestion, appetite management, everyday energy and overall wellness \u2014 all in convenient daily capsules.', price: 399, sale: 299, saleOn: true, stock: 42, img: 'assets/product-good-gold.webp' },
-        { id: 'gg', name: 'Eterna\u2122 GG', tag: 'Geranylgeraniol 150mg · 30 soft gels', desc: 'Cellular energy, stronger every day. Supports mitochondrial function, muscle recovery, healthy aging and heart health. Part of Luke\u2019s Gold Line.', price: 450, sale: null, saleOn: false, stock: 18, img: 'assets/product-eterna-gg.webp' }
+        { id: 'gg', name: 'Eterna\u2122 GG', tag: 'Geranylgeraniol 150mg · 30 soft gels', desc: 'Cellular energy, stronger every day. Supports mitochondrial function, muscle recovery, healthy aging and heart health. Part of Luke\u2019s Gold Line.', price: 450, sale: null, saleOn: false, stock: 18, img: 'assets/product-eterna-gg-20261015.webp' }
       ],
       cart: saved.cart || [],
       orders: []
@@ -1534,6 +1534,10 @@ class Component extends DCLogic {
         const cur = this.state;
         const merged = state.products.map(sp => {
           const fromServer = { ...sp };
+          // Upgrade the previous bundled photo while preserving admin uploads.
+          if (sp.id === 'gg' && /^\/?assets\/product-eterna-gg\.(webp|png)$/.test(fromServer.img || '')) {
+            fromServer.img = 'assets/product-eterna-gg-20261015.webp';
+          }
           if (!fromServer.img) delete fromServer.img;
           if (!fromServer.desc) delete fromServer.desc;
           return { ...(cur.products.find(x => x.id === sp.id) || {}), ...fromServer };
@@ -1870,8 +1874,11 @@ class Component extends DCLogic {
     const bundleNote = (bestTier ? 'Best value: ' + bestTier.qty + ' bags at ' + R(Math.round(perBag(bestTier))) + ' a bag. ' : '') + deliveryNote;
     const shopProducts = s.products.map(p => {
       const hasSale = !!(p.saleOn && p.sale);
+      const isEternaPhoto = p.img === 'assets/product-eterna-gg-20261015.webp';
       return {
         ...p,
+        imageFit: isEternaPhoto ? 'contain' : 'cover',
+        imageSrcSet: isEternaPhoto ? 'assets/product-eterna-gg-20261015-480.webp 480w, assets/product-eterna-gg-20261015.webp 960w' : '',
         hasSale,
         priceLabel: R(this.effectivePrice(p)),
         wasLabel: R(p.price),
